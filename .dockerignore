@@ -1,0 +1,27 @@
+# Node
+**/node_modules
+**/npm-debug.log
+frontend/dist
+
+# .NET build output
+**/bin
+**/obj
+
+# Local database (never ship dev data; Railway uses Postgres)
+**/*.db
+**/*.db-shm
+**/*.db-wal
+
+# Local uploads (dev images should not go into the image)
+backend/PortfolioApi/wwwroot/uploads/*
+
+# Editor / OS
+.vs
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
