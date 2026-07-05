@@ -2,6 +2,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.IdentityModel.Tokens;
 using PortfolioApi.Auth;
 using PortfolioApi.Data;
@@ -62,7 +64,32 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
-    db.Database.EnsureCreated();
+
+    if (db.Database.IsNpgsql())
+    {
+        // Postgres (Railway): apply EF Core migrations so the schema is created
+        // deterministically and tracked in __EFMigrationsHistory. An earlier
+        // EnsureCreated()-based boot (or an interrupted schema creation) can leave
+        // tables with no migrations history, which would make Migrate() fail with
+        // "already exists". Because there is no real data until the app first boots
+        // successfully, clear such a legacy/partial schema exactly once so
+        // migrations can apply from a clean slate. After the first successful
+        // Migrate(), the history table exists and this block never runs again.
+        var creator = db.Database.GetService<IRelationalDatabaseCreator>();
+        if (!db.Database.GetAppliedMigrations().Any() && creator.HasTables())
+        {
+            db.Database.ExecuteSqlRaw("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
+        }
+
+        db.Database.Migrate();
+    }
+    else
+    {
+        // Local dev (SQLite): the model has no provider-specific migrations, so
+        // create the schema directly from the model.
+        db.Database.EnsureCreated();
+    }
+
     PortfolioSeeder.Seed(db);
 }
 
