@@ -1,19 +1,24 @@
 import { ArrowUpRight, Sparkles } from 'lucide-react';
-import { GithubIcon } from '../lib/brand-icons';
+import { Link } from 'react-router-dom';
 import type { Project } from '../lib/api';
 import { resolveIcon, accent } from '../lib/icons';
 import { resolveAsset } from '../lib/admin-api';
 import { useReveal } from '../hooks/useReveal';
 
-function ProjectCard({ project, index }: { project: Project; index: number }) {
+const MAX_CARD_TAGS = 3;
+
+function ProjectCard({ project }: { project: Project }) {
   const Icon = resolveIcon(project.icon);
   const a = accent(project.accent);
   const image = resolveAsset(project.imageUrl);
+  const visibleTags = project.tags.slice(0, MAX_CARD_TAGS);
+  const extraTags = project.tags.length - visibleTags.length;
 
   return (
-    <article
-      className={`group card-surface flex flex-col p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-card ${a.ring}`}
-      style={{ animationDelay: `${index * 80}ms` }}
+    <Link
+      to={`/projects/${project.id}`}
+      aria-label={`View ${project.title} details`}
+      className={`group card-surface flex h-full flex-col p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-card ${a.ring}`}
     >
       <div className="relative mb-5 flex h-32 items-center justify-center overflow-hidden rounded-xl border border-line bg-bg-soft">
         {image ? (
@@ -32,41 +37,32 @@ function ProjectCard({ project, index }: { project: Project; index: number }) {
       </div>
 
       <h3 className="text-lg font-bold text-white">{project.title}</h3>
-      <p className="mt-1.5 flex-1 text-sm text-slate-400">{project.description}</p>
+      <p className="mt-1.5 flex-1 text-sm leading-relaxed text-slate-400 line-clamp-2">
+        {project.description}
+      </p>
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {project.tags.map((tag) => (
-          <span key={tag} className="tag-chip">
-            {tag}
-          </span>
-        ))}
-      </div>
+      {visibleTags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {visibleTags.map((tag) => (
+            <span key={tag} className="tag-chip">
+              {tag}
+            </span>
+          ))}
+          {extraTags > 0 && <span className="tag-chip">+{extraTags}</span>}
+        </div>
+      )}
 
       <div className="mt-5 flex items-center justify-between border-t border-line pt-4">
-        <div className="flex gap-2">
-          {project.repoUrl && (
-            <a
-              href={project.repoUrl}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`${project.title} source`}
-              className="grid h-8 w-8 place-items-center rounded-lg border border-line text-slate-400 transition-colors hover:text-white"
-            >
-              <GithubIcon size={15} />
-            </a>
-          )}
-        </div>
-        <a
-          href={project.liveUrl ?? project.repoUrl ?? '#'}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Open ${project.title}`}
+        <span className="text-sm font-medium text-slate-400 transition-colors group-hover:text-white">
+          View details
+        </span>
+        <span
           className={`grid h-9 w-9 place-items-center rounded-full border border-line ${a.text} transition-all duration-300 group-hover:border-current`}
         >
           <ArrowUpRight size={16} />
-        </a>
+        </span>
       </div>
-    </article>
+    </Link>
   );
 }
 
@@ -99,7 +95,7 @@ export default function Projects({ projects }: { projects: Project[] }) {
       >
         {projects.map((project, i) => (
           <div key={project.id} className={visible ? 'animate-fade-up' : ''} style={{ animationDelay: `${i * 80}ms` }}>
-            <ProjectCard project={project} index={i} />
+            <ProjectCard project={project} />
           </div>
         ))}
       </div>

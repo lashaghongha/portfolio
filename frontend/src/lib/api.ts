@@ -55,7 +55,20 @@ async function getJson<T>(path: string): Promise<T> {
 export const getProfile = () => getJson<Profile>('/api/profile');
 export const getStats = () => getJson<Stat[]>('/api/stats');
 export const getProjects = () => getJson<Project[]>('/api/projects');
+export const getProject = (id: number) => getJson<Project>(`/api/projects/${id}`);
 export const getSkills = () => getJson<Skill[]>('/api/skills');
+
+// Only allow safe schemes for user-editable links (guards against javascript:/data: URLs).
+export function safeUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) return url;
+  } catch {
+    return undefined;
+  }
+  return undefined;
+}
 
 export interface ContactResult {
   success: boolean;
