@@ -14,6 +14,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<Stat> Stats => Set<Stat>();
+    public DbSet<StoredImage> Images => Set<StoredImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,6 +30,10 @@ public class PortfolioDbContext : DbContext
 
         modelBuilder.Entity<Project>()
             .Property(p => p.Tags)
+            .HasConversion(converter, comparer);
+
+        modelBuilder.Entity<Project>()
+            .Property(p => p.GalleryUrls)
             .HasConversion(converter, comparer);
     }
 }

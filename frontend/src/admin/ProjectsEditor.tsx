@@ -6,12 +6,13 @@ import {
 } from '../lib/admin-api';
 import { Field, TextInput, TextArea, Toggle, Section } from './ui';
 import ImageUploader from './ImageUploader';
+import GalleryUploader from './GalleryUploader';
 
 type Draft = Omit<Project, 'id'> & { id: number | null };
 
 const empty: Draft = {
   id: null, title: '', description: '', icon: 'sparkles', accent: 'violet',
-  tags: [], imageUrl: null, repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
+  tags: [], imageUrl: null, galleryUrls: [], repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
 };
 
 const accents = ['violet', 'blue', 'green', 'orange'];
@@ -86,6 +87,12 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
             </div>
           </Section>
         </div>
+      </div>
+
+      <div className="mt-4">
+        <Section title="Gallery" hint="Extra screenshots shown on the project detail page">
+          <GalleryUploader value={draft.galleryUrls} onChange={(urls) => set({ galleryUrls: urls })} />
+        </Section>
       </div>
 
       <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">

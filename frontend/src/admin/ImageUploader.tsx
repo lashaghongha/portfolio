@@ -4,11 +4,11 @@ import { uploadImage, resolveAsset } from '../lib/admin-api';
 
 // Keep these in sync with AdminEndpoints.cs (server-side limits).
 const MAX_BYTES = 5 * 1024 * 1024;
-const ACCEPTED_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
-const HINT = 'PNG, JPG, WebP, GIF or SVG · up to 5MB';
+export const ACCEPTED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml'];
+export const IMAGE_HINT = 'PNG, JPG, WebP, GIF or SVG · up to 5MB';
 
-function validate(file: File): string | null {
-  if (!ACCEPTED_TYPES.includes(file.type)) return 'Unsupported file type.';
+export function validateImageFile(file: File): string | null {
+  if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return 'Unsupported file type.';
   if (file.size > MAX_BYTES) return 'File too large (max 5MB).';
   return null;
 }
@@ -27,7 +27,7 @@ export default function ImageUploader({
   const preview = resolveAsset(value);
 
   async function handleFile(file: File) {
-    const problem = validate(file);
+    const problem = validateImageFile(file);
     if (problem) {
       setStatus(problem);
       return;
@@ -91,7 +91,7 @@ export default function ImageUploader({
       <input
         ref={fileRef}
         type="file"
-        accept={ACCEPTED_TYPES.join(',')}
+        accept={ACCEPTED_IMAGE_TYPES.join(',')}
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0];
@@ -101,7 +101,7 @@ export default function ImageUploader({
       />
 
       <div className="mt-2 flex items-center justify-between gap-2">
-        <span className={`text-xs ${status ? 'text-slate-400' : 'text-slate-600'}`}>{status || HINT}</span>
+        <span className={`text-xs ${status ? 'text-slate-400' : 'text-slate-600'}`}>{status || IMAGE_HINT}</span>
         {value && (
           <button
             type="button"

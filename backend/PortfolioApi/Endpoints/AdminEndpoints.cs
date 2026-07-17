@@ -9,6 +9,16 @@ public static class AdminEndpoints
     private static readonly string[] AllowedImageExtensions = { ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg" };
     private const long MaxImageBytes = 5 * 1024 * 1024;
 
+    private static string ContentTypeFor(string ext) => ext switch
+    {
+        ".png" => "image/png",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        ".webp" => "image/webp",
+        ".gif" => "image/gif",
+        ".svg" => "image/svg+xml",
+        _ => "application/octet-stream",
+    };
+
     public static void MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var admin = app.MapGroup("/api/admin").RequireAuthorization();
@@ -58,6 +68,7 @@ public static class AdminEndpoints
             project.Accent = input.Accent;
             project.Tags = input.Tags;
             project.ImageUrl = input.ImageUrl;
+            project.GalleryUrls = input.GalleryUrls;
             project.RepoUrl = input.RepoUrl;
             project.LiveUrl = input.LiveUrl;
             project.Featured = input.Featured;
@@ -141,8 +152,8 @@ public static class AdminEndpoints
             return Results.NoContent();
         });
 
-        // ---- Image upload ----
-        admin.MapPost("/upload", async (IFormFile? file, IWebHostEnvironment env) =>
+        // ---- Image upload (stored in DB so it survives redeploys) ----
+        admin.MapPost("/upload", async (IFormFile? file, PortfolioDbContext db) =>
         {
             if (file is null || file.Length == 0)
                 return Results.BadRequest(new { error = "No file provided." });
@@ -153,18 +164,19 @@ public static class AdminEndpoints
             if (!AllowedImageExtensions.Contains(ext))
                 return Results.BadRequest(new { error = "Unsupported file type." });
 
-            var webRoot = env.WebRootPath ?? Path.Combine(env.ContentRootPath, "wwwroot");
-            var uploadsDir = Path.Combine(webRoot, "uploads");
-            Directory.CreateDirectory(uploadsDir);
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
 
-            var fileName = $"{Guid.NewGuid():N}{ext}";
-            var fullPath = Path.Combine(uploadsDir, fileName);
-            await using (var stream = File.Create(fullPath))
+            var image = new StoredImage
             {
-                await file.CopyToAsync(stream);
-            }
+                ContentType = ContentTypeFor(ext),
+                Data = ms.ToArray(),
+                CreatedAt = DateTime.UtcNow,
+            };
+            db.Images.Add(image);
+            await db.SaveChangesAsync();
 
-            return Results.Ok(new { url = $"/uploads/{fileName}" });
+            return Results.Ok(new { url = $"/api/images/{image.Id}" });
         }).DisableAntiforgery();
     }
 }

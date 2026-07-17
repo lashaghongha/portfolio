@@ -11,10 +11,21 @@ public class Project
     public string Accent { get; set; } = "violet";
     public List<string> Tags { get; set; } = new();
     public string? ImageUrl { get; set; }
+    public List<string> GalleryUrls { get; set; } = new();
     public string? RepoUrl { get; set; }
     public string? LiveUrl { get; set; }
     public bool Featured { get; set; }
     public int SortOrder { get; set; }
+}
+
+// Binary image stored in the database so uploads survive redeploys
+// (Railway's filesystem is ephemeral). Served via GET /api/images/{id}.
+public class StoredImage
+{
+    public int Id { get; set; }
+    public string ContentType { get; set; } = "application/octet-stream";
+    public byte[] Data { get; set; } = Array.Empty<byte>();
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
 
 public class Skill

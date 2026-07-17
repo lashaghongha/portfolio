@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using PortfolioApi.Data;
@@ -11,9 +12,11 @@ using PortfolioApi.Data;
 namespace PortfolioApi.Migrations
 {
     [DbContext(typeof(PortfolioDbContext))]
-    partial class PortfolioDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260717122705_AddStoredImages")]
+    partial class AddStoredImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

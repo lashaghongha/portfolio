@@ -133,6 +133,15 @@ api.MapGet("/projects/{id:int}", async (int id, PortfolioDbContext db) =>
     return project is null ? Results.NotFound() : Results.Ok(project);
 });
 
+// Serve DB-stored images. Content is immutable per id, so cache aggressively.
+api.MapGet("/images/{id:int}", async (int id, PortfolioDbContext db, HttpContext ctx) =>
+{
+    var image = await db.Images.FindAsync(id);
+    if (image is null) return Results.NotFound();
+    ctx.Response.Headers.CacheControl = "public, max-age=31536000, immutable";
+    return Results.File(image.Data, image.ContentType);
+});
+
 api.MapGet("/skills", async (PortfolioDbContext db) =>
     Results.Ok(await db.Skills.OrderBy(s => s.SortOrder).ThenBy(s => s.Id).ToListAsync()));
 

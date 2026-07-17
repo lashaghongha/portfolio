@@ -18,6 +18,7 @@ export interface Project {
   accent: string;
   tags: string[];
   imageUrl: string | null;
+  galleryUrls: string[];
   repoUrl: string | null;
   liveUrl: string | null;
   featured: boolean;
