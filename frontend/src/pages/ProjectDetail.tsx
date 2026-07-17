@@ -8,6 +8,8 @@ import { resolveAsset } from '../lib/admin-api';
 
 type LoadState = 'loading' | 'loaded' | 'notfound' | 'error';
 
+const GALLERY_PREVIEW_COUNT = 4;
+
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
@@ -81,6 +83,7 @@ export default function ProjectDetail() {
 }
 
 function ProjectView({ project }: { project: Project }) {
+  const [expanded, setExpanded] = useState(false);
   const Icon = resolveIcon(project.icon);
   const a = accent(project.accent);
   const image = resolveAsset(project.imageUrl);
@@ -89,6 +92,8 @@ function ProjectView({ project }: { project: Project }) {
   const gallery = project.galleryUrls
     .map((url) => resolveAsset(url))
     .filter((src): src is string => Boolean(src));
+  const hasMore = gallery.length > GALLERY_PREVIEW_COUNT;
+  const visibleGallery = expanded ? gallery : gallery.slice(0, GALLERY_PREVIEW_COUNT);
 
   return (
     <article className="mx-auto max-w-4xl">
@@ -149,16 +154,28 @@ function ProjectView({ project }: { project: Project }) {
         <div className="mt-12">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Gallery</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {gallery.map((src, i) => (
-              <img
+            {visibleGallery.map((src, i) => (
+              <div
                 key={i}
-                src={src}
-                alt={`${project.title} screenshot ${i + 1}`}
-                loading="lazy"
-                className="w-full rounded-2xl border border-line object-cover"
-              />
+                className="aspect-video overflow-hidden rounded-2xl border border-line bg-bg-soft"
+              >
+                <img
+                  src={src}
+                  alt={`${project.title} screenshot ${i + 1}`}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              </div>
             ))}
           </div>
+
+          {hasMore && (
+            <div className="mt-6 flex justify-center">
+              <button type="button" onClick={() => setExpanded((v) => !v)} className="btn-ghost">
+                {expanded ? 'View less' : `View more (${gallery.length - GALLERY_PREVIEW_COUNT})`}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </article>
