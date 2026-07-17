@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
-import { Save, Trash2, Plus, Upload, ImageOff } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Save, Trash2, Plus } from 'lucide-react';
 import type { Project } from '../lib/api';
 import {
-  adminGetProjects, createProject, updateProject, deleteProject, uploadImage, resolveAsset,
+  adminGetProjects, createProject, updateProject, deleteProject,
 } from '../lib/admin-api';
-import { Field, TextInput, TextArea, Toggle } from './ui';
+import { Field, TextInput, TextArea, Toggle, Section } from './ui';
+import ImageUploader from './ImageUploader';
 
 type Draft = Omit<Project, 'id'> & { id: number | null };
 
@@ -22,20 +23,8 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
   const [tagsText, setTagsText] = useState(initial.tags.join(', '));
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const set = (patch: Partial<Draft>) => setDraft((d) => ({ ...d, ...patch }));
-
-  async function handleUpload(file: File) {
-    setBusy(true); setStatus('Uploading…');
-    try {
-      const url = await uploadImage(file);
-      set({ imageUrl: url });
-      setStatus('Image uploaded.');
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : 'Upload failed.');
-    } finally { setBusy(false); }
-  }
 
   async function save() {
     setBusy(true); setStatus('');
@@ -59,51 +48,43 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
     catch (err) { setStatus(err instanceof Error ? err.message : 'Delete failed.'); setBusy(false); }
   }
 
-  const preview = resolveAsset(draft.imageUrl);
-
   return (
     <div className="card-surface p-5">
-      <div className="grid gap-4 md:grid-cols-[160px_1fr]">
-        <div>
-          <div className="relative grid aspect-video place-items-center overflow-hidden rounded-lg border border-line bg-bg-soft">
-            {preview
-              ? <img src={preview} alt="" className="h-full w-full object-cover" />
-              : <ImageOff size={22} className="text-slate-600" />}
-          </div>
-          <input ref={fileRef} type="file" accept="image/*" hidden
-            onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])} />
-          <button type="button" onClick={() => fileRef.current?.click()}
-            className="btn-ghost mt-2 w-full justify-center !py-1.5 text-xs">
-            <Upload size={13} /> Upload image
-          </button>
-          {draft.imageUrl && (
-            <button type="button" onClick={() => set({ imageUrl: null })}
-              className="mt-1 w-full text-xs text-slate-500 hover:text-red-400">remove image</button>
-          )}
-        </div>
+      <div className="grid gap-4 md:grid-cols-[200px_1fr]">
+        <Section title="Cover image" hint="16:9">
+          <ImageUploader value={draft.imageUrl} onChange={(url) => set({ imageUrl: url })} />
+        </Section>
 
-        <div className="space-y-3">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Title"><TextInput value={draft.title} onChange={(e) => set({ title: e.target.value })} /></Field>
-            <Field label="Icon (lucide name)"><TextInput value={draft.icon} onChange={(e) => set({ icon: e.target.value })} /></Field>
-          </div>
-          <Field label="Description"><TextArea value={draft.description} onChange={(e) => set({ description: e.target.value })} /></Field>
-          <Field label="Tags (comma separated)"><TextInput value={tagsText} onChange={(e) => setTagsText(e.target.value)} /></Field>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Repo URL"><TextInput value={draft.repoUrl ?? ''} onChange={(e) => set({ repoUrl: e.target.value })} /></Field>
-            <Field label="Live URL"><TextInput value={draft.liveUrl ?? ''} onChange={(e) => set({ liveUrl: e.target.value })} /></Field>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <Field label="Accent">
-              <select value={draft.accent} onChange={(e) => set({ accent: e.target.value })}
-                className="rounded-lg border border-line bg-bg-soft px-3 py-2 text-sm text-white outline-none focus:border-accent/60">
-                {accents.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </Field>
-            <Field label="Order"><TextInput type="number" value={draft.sortOrder}
-              onChange={(e) => set({ sortOrder: Number(e.target.value) })} className="w-20" /></Field>
-            <div className="pt-5"><Toggle checked={draft.featured} onChange={(v) => set({ featured: v })} label="Featured" /></div>
-          </div>
+        <div className="space-y-4">
+          <Section title="Basics">
+            <div className="space-y-3">
+              <Field label="Title"><TextInput value={draft.title} onChange={(e) => set({ title: e.target.value })} /></Field>
+              <Field label="Description"><TextArea value={draft.description} onChange={(e) => set({ description: e.target.value })} /></Field>
+              <Field label="Tags (comma separated)"><TextInput value={tagsText} onChange={(e) => setTagsText(e.target.value)} /></Field>
+            </div>
+          </Section>
+
+          <Section title="Links">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Repo URL"><TextInput value={draft.repoUrl ?? ''} onChange={(e) => set({ repoUrl: e.target.value })} /></Field>
+              <Field label="Live URL"><TextInput value={draft.liveUrl ?? ''} onChange={(e) => set({ liveUrl: e.target.value })} /></Field>
+            </div>
+          </Section>
+
+          <Section title="Appearance">
+            <div className="flex flex-wrap items-center gap-3">
+              <Field label="Icon (lucide name)"><TextInput value={draft.icon} onChange={(e) => set({ icon: e.target.value })} /></Field>
+              <Field label="Accent">
+                <select value={draft.accent} onChange={(e) => set({ accent: e.target.value })}
+                  className="rounded-lg border border-line bg-bg-soft px-3 py-2 text-sm text-white outline-none focus:border-accent/60">
+                  {accents.map((a) => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </Field>
+              <Field label="Order"><TextInput type="number" value={draft.sortOrder}
+                onChange={(e) => set({ sortOrder: Number(e.target.value) })} className="w-20" /></Field>
+              <div className="pt-5"><Toggle checked={draft.featured} onChange={(v) => set({ featured: v })} label="Featured" /></div>
+            </div>
+          </Section>
         </div>
       </div>
 

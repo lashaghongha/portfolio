@@ -9,6 +9,18 @@ export function Field({ label, children }: { label: string; children: ReactNode 
   );
 }
 
+export function Section({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-xl border border-line bg-white/[0.02] p-4">
+      <div className="mb-3 flex items-baseline justify-between gap-3">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-accent-soft">{title}</h4>
+        {hint && <span className="text-xs text-slate-500">{hint}</span>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 const inputBase =
   'w-full rounded-lg border border-line bg-bg-soft px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition-colors focus:border-accent/60';
 
