@@ -32,8 +32,59 @@ public class PortfolioDbContext : DbContext
             .Property(p => p.Tags)
             .HasConversion(converter, comparer);
 
+        // Gallery is stored as JSON in the legacy "GalleryUrls" column. The reader
+        // tolerates both the old string-array shape (["url", ...]) and the new
+        // object shape ([{ "Url": ..., "Caption": ... }]), so existing rows keep working.
+        var galleryConverter = new ValueConverter<List<GalleryItem>, string>(
+            v => SerializeGallery(v),
+            v => DeserializeGallery(v));
+
+        var galleryComparer = new ValueComparer<List<GalleryItem>>(
+            (a, b) => SerializeGallery(a) == SerializeGallery(b),
+            v => SerializeGallery(v).GetHashCode(),
+            v => DeserializeGallery(SerializeGallery(v)));
+
         modelBuilder.Entity<Project>()
-            .Property(p => p.GalleryUrls)
-            .HasConversion(converter, comparer);
+            .Property(p => p.Gallery)
+            .HasColumnName("GalleryUrls")
+            .HasConversion(galleryConverter, galleryComparer);
     }
+
+    private static string SerializeGallery(List<GalleryItem>? gallery) =>
+        JsonSerializer.Serialize(gallery ?? new List<GalleryItem>(), (JsonSerializerOptions?)null);
+
+    private static List<GalleryItem> DeserializeGallery(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new();
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            if (doc.RootElement.ValueKind != JsonValueKind.Array) return new();
+
+            var items = new List<GalleryItem>();
+            foreach (var element in doc.RootElement.EnumerateArray())
+            {
+                if (element.ValueKind == JsonValueKind.String)
+                {
+                    items.Add(new GalleryItem { Url = element.GetString() ?? string.Empty });
+                }
+                else if (element.ValueKind == JsonValueKind.Object)
+                {
+                    var url = ReadString(element, "url") ?? ReadString(element, "Url") ?? string.Empty;
+                    var caption = ReadString(element, "caption") ?? ReadString(element, "Caption");
+                    items.Add(new GalleryItem { Url = url, Caption = caption });
+                }
+            }
+            return items;
+        }
+        catch (JsonException)
+        {
+            return new();
+        }
+    }
+
+    private static string? ReadString(JsonElement element, string name) =>
+        element.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
 }

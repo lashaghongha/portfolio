@@ -11,11 +11,18 @@ public class Project
     public string Accent { get; set; } = "violet";
     public List<string> Tags { get; set; } = new();
     public string? ImageUrl { get; set; }
-    public List<string> GalleryUrls { get; set; } = new();
+    public List<GalleryItem> Gallery { get; set; } = new();
     public string? RepoUrl { get; set; }
     public string? LiveUrl { get; set; }
     public bool Featured { get; set; }
     public int SortOrder { get; set; }
+}
+
+// A single gallery screenshot with an optional caption shown on the detail page.
+public class GalleryItem
+{
+    public string Url { get; set; } = string.Empty;
+    public string? Caption { get; set; }
 }
 
 // Binary image stored in the database so uploads survive redeploys

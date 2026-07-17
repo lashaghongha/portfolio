@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { Plus, X, Loader2 } from 'lucide-react';
+import type { GalleryItem } from '../lib/api';
 import { uploadImage, resolveAsset } from '../lib/admin-api';
 import { ACCEPTED_IMAGE_TYPES, IMAGE_HINT, validateImageFile } from './ImageUploader';
 
@@ -7,8 +8,8 @@ export default function GalleryUploader({
   value,
   onChange,
 }: {
-  value: string[];
-  onChange: (urls: string[]) => void;
+  value: GalleryItem[];
+  onChange: (items: GalleryItem[]) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
@@ -16,7 +17,7 @@ export default function GalleryUploader({
 
   async function addFiles(files: FileList) {
     setBusy(true);
-    const uploaded: string[] = [];
+    const uploaded: GalleryItem[] = [];
     let lastError = '';
     for (const file of Array.from(files)) {
       const problem = validateImageFile(file);
@@ -28,7 +29,7 @@ export default function GalleryUploader({
         setStatus('Uploading…');
         // eslint-disable-next-line no-await-in-loop -- sequential keeps upload order stable
         const url = await uploadImage(file);
-        uploaded.push(url);
+        uploaded.push({ url, caption: '' });
       } catch (err) {
         lastError = err instanceof Error ? err.message : 'Upload failed.';
       }
@@ -42,27 +43,40 @@ export default function GalleryUploader({
     onChange(value.filter((_, i) => i !== index));
   }
 
+  function setCaptionAt(index: number, caption: string) {
+    onChange(value.map((item, i) => (i === index ? { ...item, caption } : item)));
+  }
+
   return (
     <div>
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-        {value.map((url, i) => (
-          <div key={`${url}-${i}`} className="group relative aspect-video overflow-hidden rounded-lg border border-line bg-bg-soft">
-            <img src={resolveAsset(url) ?? ''} alt="" className="h-full w-full object-cover" />
-            <button
-              type="button"
-              onClick={() => removeAt(i)}
-              aria-label="Remove photo"
-              className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
-            >
-              <X size={13} />
-            </button>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {value.map((item, i) => (
+          <div key={`${item.url}-${i}`} className="flex gap-3 rounded-lg border border-line bg-bg-soft p-2">
+            <div className="group relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-bg">
+              <img src={resolveAsset(item.url) ?? ''} alt="" className="h-full w-full object-cover" />
+              <button
+                type="button"
+                onClick={() => removeAt(i)}
+                aria-label="Remove photo"
+                className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+              >
+                <X size={13} />
+              </button>
+            </div>
+            <input
+              type="text"
+              value={item.caption ?? ''}
+              onChange={(e) => setCaptionAt(i, e.target.value)}
+              placeholder="Caption (optional)"
+              className="min-w-0 flex-1 self-center rounded-lg border border-line bg-bg px-3 py-2 text-sm text-white outline-none placeholder:text-slate-600 focus:border-accent/60"
+            />
           </div>
         ))}
 
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
-          className="grid aspect-video place-items-center rounded-lg border border-dashed border-line bg-bg-soft text-slate-500 transition-colors hover:border-accent/50 hover:text-accent-soft"
+          className="grid aspect-video min-h-24 place-items-center rounded-lg border border-dashed border-line bg-bg-soft text-slate-500 transition-colors hover:border-accent/50 hover:text-accent-soft"
         >
           {busy ? <Loader2 size={18} className="animate-spin" /> : <Plus size={18} />}
         </button>

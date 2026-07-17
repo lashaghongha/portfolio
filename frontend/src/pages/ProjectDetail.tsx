@@ -89,9 +89,9 @@ function ProjectView({ project }: { project: Project }) {
   const image = resolveAsset(project.imageUrl);
   const repo = safeUrl(project.repoUrl);
   const live = safeUrl(project.liveUrl);
-  const gallery = project.galleryUrls
-    .map((url) => resolveAsset(url))
-    .filter((src): src is string => Boolean(src));
+  const gallery = project.gallery
+    .map((item) => ({ src: resolveAsset(item.url), caption: item.caption?.trim() || '' }))
+    .filter((item): item is { src: string; caption: string } => Boolean(item.src));
   const hasMore = gallery.length > GALLERY_PREVIEW_COUNT;
   const visibleGallery = expanded ? gallery : gallery.slice(0, GALLERY_PREVIEW_COUNT);
 
@@ -154,18 +154,20 @@ function ProjectView({ project }: { project: Project }) {
         <div className="mt-12">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Gallery</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {visibleGallery.map((src, i) => (
-              <div
-                key={i}
-                className="aspect-video overflow-hidden rounded-2xl border border-line bg-bg-soft"
-              >
-                <img
-                  src={src}
-                  alt={`${project.title} screenshot ${i + 1}`}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              </div>
+            {visibleGallery.map((item, i) => (
+              <figure key={i} className="space-y-2">
+                <div className="aspect-video overflow-hidden rounded-2xl border border-line bg-bg-soft">
+                  <img
+                    src={item.src}
+                    alt={item.caption || `${project.title} screenshot ${i + 1}`}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                {item.caption && (
+                  <figcaption className="text-sm text-slate-400">{item.caption}</figcaption>
+                )}
+              </figure>
             ))}
           </div>
 

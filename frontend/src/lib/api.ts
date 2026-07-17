@@ -10,6 +10,11 @@ export interface Profile {
   email: string;
 }
 
+export interface GalleryItem {
+  url: string;
+  caption?: string | null;
+}
+
 export interface Project {
   id: number;
   title: string;
@@ -18,7 +23,7 @@ export interface Project {
   accent: string;
   tags: string[];
   imageUrl: string | null;
-  galleryUrls: string[];
+  gallery: GalleryItem[];
   repoUrl: string | null;
   liveUrl: string | null;
   featured: boolean;

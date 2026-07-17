@@ -12,7 +12,7 @@ type Draft = Omit<Project, 'id'> & { id: number | null };
 
 const empty: Draft = {
   id: null, title: '', description: '', icon: 'sparkles', accent: 'violet',
-  tags: [], imageUrl: null, galleryUrls: [], repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
+  tags: [], imageUrl: null, gallery: [], repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
 };
 
 const accents = ['violet', 'blue', 'green', 'orange'];
@@ -91,7 +91,7 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
 
       <div className="mt-4">
         <Section title="Gallery" hint="Extra screenshots shown on the project detail page">
-          <GalleryUploader value={draft.galleryUrls} onChange={(urls) => set({ galleryUrls: urls })} />
+          <GalleryUploader value={draft.gallery} onChange={(gallery) => set({ gallery })} />
         </Section>
       </div>
 

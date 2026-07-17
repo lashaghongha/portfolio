@@ -68,7 +68,7 @@ public static class AdminEndpoints
             project.Accent = input.Accent;
             project.Tags = input.Tags;
             project.ImageUrl = input.ImageUrl;
-            project.GalleryUrls = input.GalleryUrls;
+            project.Gallery = input.Gallery;
             project.RepoUrl = input.RepoUrl;
             project.LiveUrl = input.LiveUrl;
             project.Featured = input.Featured;
