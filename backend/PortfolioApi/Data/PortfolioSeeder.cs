@@ -10,11 +10,11 @@ public static class PortfolioSeeder
         {
             db.Profiles.Add(new Profile
             {
-                Name = "Mate G.",
+                Name = "Lasha Ghongha",
                 Role = "Full Stack Developer",
                 Tagline = "I build digital experiences that make an impact.",
                 Bio = "Full Stack Developer crafting modern, responsive and user-friendly web applications with clean code and great design.",
-                GithubUrl = "https://github.com/",
+                GithubUrl = "https://github.com/lashaghongha",
                 LinkedInUrl = "https://linkedin.com/",
                 Email = "hello@example.com",
             });

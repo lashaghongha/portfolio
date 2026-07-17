@@ -1,5 +1,6 @@
 import { ArrowRight, MessageCircle, Hand } from 'lucide-react';
 import type { Profile } from '../lib/api';
+import { DEFAULT_NAME } from '../lib/profile';
 
 function CodeEditor() {
   return (
@@ -24,7 +25,7 @@ function CodeEditor() {
             {'\n'}
             <span className="text-slate-600">2    </span>
             <span className="text-slate-300">name</span>
-            <span className="text-slate-400">:</span> <span className="text-emerald-300">'Mate G.'</span>
+            <span className="text-slate-400">:</span> <span className="text-emerald-300">'Lasha Ghongha'</span>
             <span className="text-slate-400">,</span>
             {'\n'}
             <span className="text-slate-600">3    </span>
@@ -83,7 +84,7 @@ export default function Hero({ profile }: { profile: Profile | null }) {
       <div className="container-px grid items-center gap-12 pb-16 lg:grid-cols-2">
         <div className="animate-fade-up">
           <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-4 py-1.5 text-sm font-medium text-accent-soft">
-            <Hand size={15} className="text-yellow-400" /> Hello, I&apos;m {profile?.name?.split(' ')[0] ?? 'Mate'}
+            <Hand size={15} className="text-yellow-400" /> Hello, I&apos;m {profile?.name?.split(' ')[0] ?? DEFAULT_NAME.split(' ')[0]}
           </span>
 
           <h1 className="mt-6 text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">

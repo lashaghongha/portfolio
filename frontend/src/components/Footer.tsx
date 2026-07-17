@@ -1,17 +1,19 @@
 import { Mail } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../lib/brand-icons';
 import type { Profile } from '../lib/api';
+import { DEFAULT_NAME, getInitials } from '../lib/profile';
 
 export default function Footer({ profile }: { profile: Profile | null }) {
+  const initials = getInitials(profile?.name);
   return (
     <footer className="border-t border-line">
       <div className="container-px flex flex-col items-center justify-between gap-4 py-8 sm:flex-row">
         <div className="flex items-center gap-3">
           <span className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-accent-glow to-accent font-black text-white">
-            MG
+            {initials}
           </span>
           <span className="text-sm text-slate-500">
-            © {new Date().getFullYear()} {profile?.name ?? 'Mate G.'}. All rights reserved.
+            © {new Date().getFullYear()} {profile?.name ?? DEFAULT_NAME}. All rights reserved.
           </span>
         </div>
 
