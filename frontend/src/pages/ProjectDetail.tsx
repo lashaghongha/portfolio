@@ -86,6 +86,9 @@ function ProjectView({ project }: { project: Project }) {
   const image = resolveAsset(project.imageUrl);
   const repo = safeUrl(project.repoUrl);
   const live = safeUrl(project.liveUrl);
+  const gallery = project.galleryUrls
+    .map((url) => resolveAsset(url))
+    .filter((src): src is string => Boolean(src));
 
   return (
     <article className="mx-auto max-w-4xl">
@@ -141,6 +144,23 @@ function ProjectView({ project }: { project: Project }) {
             </p>
           ))}
       </div>
+
+      {gallery.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Gallery</h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {gallery.map((src, i) => (
+              <img
+                key={i}
+                src={src}
+                alt={`${project.title} screenshot ${i + 1}`}
+                loading="lazy"
+                className="w-full rounded-2xl border border-line object-cover"
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </article>
   );
 }
