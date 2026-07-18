@@ -7,12 +7,13 @@ import {
 import { Field, TextInput, TextArea, Toggle, Section } from './ui';
 import ImageUploader from './ImageUploader';
 import GalleryUploader from './GalleryUploader';
+import SpecsEditor from './SpecsEditor';
 
 type Draft = Omit<Project, 'id'> & { id: number | null };
 
 const empty: Draft = {
   id: null, title: '', description: '', icon: 'sparkles', accent: 'violet',
-  tags: [], imageUrl: null, gallery: [], repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
+  tags: [], imageUrl: null, gallery: [], specs: [], repoUrl: '', liveUrl: '', featured: true, sortOrder: 0,
 };
 
 const accents = ['violet', 'blue', 'green', 'orange'];
@@ -92,6 +93,12 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
       <div className="mt-4">
         <Section title="Gallery" hint="Extra screenshots shown on the project detail page">
           <GalleryUploader value={draft.gallery} onChange={(gallery) => set({ gallery })} />
+        </Section>
+      </div>
+
+      <div className="mt-4">
+        <Section title="Tech stack" hint="Rows rendered as a table on the project detail page">
+          <SpecsEditor value={draft.specs} onChange={(specs) => set({ specs })} />
         </Section>
       </div>
 

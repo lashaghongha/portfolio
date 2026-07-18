@@ -92,6 +92,7 @@ function ProjectView({ project }: { project: Project }) {
   const gallery = project.gallery
     .map((item) => ({ src: resolveAsset(item.url), caption: item.caption?.trim() || '' }))
     .filter((item): item is { src: string; caption: string } => Boolean(item.src));
+  const specs = project.specs.filter((row) => row.label.trim() || row.value.trim());
   const hasMore = gallery.length > GALLERY_PREVIEW_COUNT;
   const visibleGallery = expanded ? gallery : gallery.slice(0, GALLERY_PREVIEW_COUNT);
 
@@ -149,6 +150,26 @@ function ProjectView({ project }: { project: Project }) {
             </p>
           ))}
       </div>
+
+      {specs.length > 0 && (
+        <div className="mt-12">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Tech stack</h2>
+          <div className="mt-4 overflow-hidden rounded-2xl border border-line">
+            <table className="w-full text-left text-sm">
+              <tbody>
+                {specs.map((row, i) => (
+                  <tr key={i} className="border-b border-line last:border-b-0">
+                    <th scope="row" className="w-1/3 bg-bg-soft px-4 py-3 font-semibold text-white">
+                      {row.label}
+                    </th>
+                    <td className="px-4 py-3 text-slate-300">{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {gallery.length > 0 && (
         <div className="mt-12">

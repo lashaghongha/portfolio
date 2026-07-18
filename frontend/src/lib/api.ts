@@ -15,6 +15,11 @@ export interface GalleryItem {
   caption?: string | null;
 }
 
+export interface SpecRow {
+  label: string;
+  value: string;
+}
+
 export interface Project {
   id: number;
   title: string;
@@ -24,6 +29,7 @@ export interface Project {
   tags: string[];
   imageUrl: string | null;
   gallery: GalleryItem[];
+  specs: SpecRow[];
   repoUrl: string | null;
   liveUrl: string | null;
   featured: boolean;

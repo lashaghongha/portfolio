@@ -48,6 +48,33 @@ public class PortfolioDbContext : DbContext
             .Property(p => p.Gallery)
             .HasColumnName("GalleryUrls")
             .HasConversion(galleryConverter, galleryComparer);
+
+        // Spec/tech-stack rows stored as JSON, same pattern as the gallery.
+        var specsConverter = new ValueConverter<List<SpecRow>, string>(
+            v => JsonSerializer.Serialize(v ?? new List<SpecRow>(), (JsonSerializerOptions?)null),
+            v => DeserializeSpecs(v));
+
+        var specsComparer = new ValueComparer<List<SpecRow>>(
+            (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
+            v => v == null ? 0 : JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
+            v => DeserializeSpecs(JsonSerializer.Serialize(v, (JsonSerializerOptions?)null)));
+
+        modelBuilder.Entity<Project>()
+            .Property(p => p.Specs)
+            .HasConversion(specsConverter, specsComparer);
+    }
+
+    private static List<SpecRow> DeserializeSpecs(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return new();
+        try
+        {
+            return JsonSerializer.Deserialize<List<SpecRow>>(json, (JsonSerializerOptions?)null) ?? new();
+        }
+        catch (JsonException)
+        {
+            return new();
+        }
     }
 
     private static string SerializeGallery(List<GalleryItem>? gallery) =>

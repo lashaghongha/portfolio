@@ -12,6 +12,7 @@ public class Project
     public List<string> Tags { get; set; } = new();
     public string? ImageUrl { get; set; }
     public List<GalleryItem> Gallery { get; set; } = new();
+    public List<SpecRow> Specs { get; set; } = new();
     public string? RepoUrl { get; set; }
     public string? LiveUrl { get; set; }
     public bool Featured { get; set; }
@@ -23,6 +24,13 @@ public class GalleryItem
 {
     public string Url { get; set; } = string.Empty;
     public string? Caption { get; set; }
+}
+
+// One row of the project's spec/tech-stack table (e.g. Label "Backend", Value "ASP.NET Core 9").
+public class SpecRow
+{
+    public string Label { get; set; } = string.Empty;
+    public string Value { get; set; } = string.Empty;
 }
 
 // Binary image stored in the database so uploads survive redeploys
