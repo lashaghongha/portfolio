@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
+import CursorGlow from './components/CursorGlow';
 import Hero from './components/Hero';
 import Stats from './components/Stats';
 import Projects from './components/Projects';
@@ -41,16 +42,19 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <Navbar profile={profile} />
-      <main>
-        <Hero profile={profile} />
-        <Projects projects={projects} />
-        <Stats stats={stats} />
-        <Skills skills={skills} />
-        <Contact profile={profile} />
-      </main>
-      <Footer profile={profile} />
+    <div className="relative min-h-screen">
+      <CursorGlow />
+      <div className="relative z-10">
+        <Navbar profile={profile} />
+        <main>
+          <Hero profile={profile} />
+          <Projects projects={projects} />
+          <Stats stats={stats} />
+          <Skills skills={skills} />
+          <Contact profile={profile} />
+        </main>
+        <Footer profile={profile} />
+      </div>
 
       {error && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-red-500/40 bg-red-950/80 px-4 py-2 text-sm text-red-300 backdrop-blur">
