@@ -30,3 +30,9 @@ backend/PortfolioApi/wwwroot/uploads/*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Secrets / local SSO helpers
+*.pem
+*.key
+start-sso.ps1
+.claude/

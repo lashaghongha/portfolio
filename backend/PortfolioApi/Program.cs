@@ -36,11 +36,16 @@ builder.Services.AddCors(options =>
                     "http://localhost:4173",
                 }.Concat(extraOrigins).ToArray())
             .AllowAnyHeader()
-            .AllowAnyMethod());
+            .AllowAnyMethod()
+            .AllowCredentials());
 });
 
 builder.Services.AddPortfolioDatabase(builder.Configuration);
 builder.Services.AddSingleton<TokenService>();
+
+// Admin Hub SSO: hub-ticket validator + single-use replay guard.
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<SsoService>();
 
 var tokenSettings = new TokenService(builder.Configuration);
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -55,6 +60,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidIssuer = TokenService.Issuer,
             ValidAudience = TokenService.Audience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(tokenSettings.SigningKey)),
+        };
+
+        // Fall back to the httpOnly admin_token cookie when there's no Authorization
+        // header. The SSO consume flow drops the cookie via a redirect, so the admin
+        // is authenticated without the SPA re-attaching a Bearer header.
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = ctx =>
+            {
+                if (string.IsNullOrEmpty(ctx.Token) &&
+                    ctx.Request.Cookies.TryGetValue("admin_token", out var cookie))
+                    ctx.Token = cookie;
+                return Task.CompletedTask;
+            }
         };
     });
 builder.Services.AddAuthorization();
@@ -108,6 +127,37 @@ api.MapPost("/auth/login", (LoginRequest request, TokenService tokens) =>
     if (string.IsNullOrEmpty(request.Password) || request.Password != tokens.AdminPassword)
         return Results.Unauthorized();
     return Results.Ok(new { token = tokens.CreateToken() });
+});
+
+// ---- Admin Hub SSO consume ----
+// Consumes a single-use hub ticket and, on success, drops the portfolio's own admin
+// session as an httpOnly cookie (the same Bearer JWT the JwtBearer handler reads).
+// Single shared admin, so a valid hub ticket for this audience is sufficient.
+api.MapGet("/admin/sso/consume", (string? token, SsoService sso, TokenService tokens, HttpContext ctx, ILoggerFactory lf) =>
+{
+    var log = lf.CreateLogger("AdminSso");
+    var appBase = (Environment.GetEnvironmentVariable("ADMIN_APP_URL") ?? "").TrimEnd('/');
+    var loginUrl = string.IsNullOrEmpty(appBase) ? "/admin/login" : $"{appBase}/admin/login";
+    var adminUrl = string.IsNullOrEmpty(appBase) ? "/admin" : $"{appBase}/admin";
+
+    var result = sso.Validate(token ?? "");
+    if (!result.Ok)
+    {
+        log.LogWarning("SSO consume rejected: {Error}", result.Error);
+        return Results.Redirect($"{loginUrl}?sso={result.Error}");
+    }
+
+    var isHttps = ctx.Request.IsHttps;
+    ctx.Response.Cookies.Append("admin_token", tokens.CreateToken(), new CookieOptions
+    {
+        HttpOnly = true,
+        Secure = isHttps,
+        SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
+        Path = "/",
+        Expires = DateTimeOffset.UtcNow.AddHours(8),
+    });
+    log.LogInformation("SSO admin login succeeded for hub user {Username}", result.Username);
+    return Results.Redirect(adminUrl);
 });
 
 // ---- Public reads ----

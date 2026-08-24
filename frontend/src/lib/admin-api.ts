@@ -6,6 +6,21 @@ export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
 export const isAuthed = (): boolean => !!getToken();
 export const logout = (): void => localStorage.removeItem(TOKEN_KEY);
 
+// SSO hydration: when the operator arrives via the hub tile, the backend sets an
+// httpOnly admin_token cookie (no localStorage Bearer). Probe a protected endpoint
+// with credentials so the cookie is sent; 200 means the cookie session is valid.
+export async function checkSession(): Promise<boolean> {
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/projects`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export async function login(password: string): Promise<void> {
   const res = await fetch(`${API_BASE}/api/auth/login`, {
     method: 'POST',
@@ -22,6 +37,7 @@ async function authed<T>(path: string, method: string, body?: unknown): Promise<
   const token = getToken();
   const res = await fetch(`${API_BASE}${path}`, {
     method,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -70,6 +86,7 @@ export async function uploadImage(file: File): Promise<string> {
   form.append('file', file);
   const res = await fetch(`${API_BASE}/api/admin/upload`, {
     method: 'POST',
+    credentials: 'include',
     headers: token ? { Authorization: `Bearer ${token}` } : {},
     body: form,
   });
