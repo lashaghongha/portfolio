@@ -7,6 +7,40 @@ import { groupGallery } from '../lib/gallery';
 import { useDragReorder } from '../hooks/useDragReorder';
 import Lightbox from '../components/Lightbox';
 
+const NEW_GROUP = '__new__';
+const UNGROUPED = '__ungrouped__';
+
+// Editable group heading. Keeps a local draft so typing never re-groups the list
+// mid-keystroke (which would move the input and steal focus). Commits on blur or
+// Enter, renaming every photo in the group at once so they stay together.
+function GroupHeader({ name, count, onRename }: { name: string; count: number; onRename: (next: string) => void }) {
+  const [draft, setDraft] = useState(name);
+
+  function commit() {
+    const next = draft.trim();
+    if (next !== name) onRename(next);
+  }
+
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <input
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
+        aria-label="Group name"
+        className="w-48 rounded-md border border-line bg-bg px-2 py-1 text-xs font-semibold uppercase tracking-wide text-accent-soft outline-none focus:border-accent/60"
+      />
+      <span className="text-xs text-slate-600">· {count}</span>
+    </div>
+  );
+}
+
 export default function GalleryUploader({
   value,
   onChange,
@@ -49,7 +83,25 @@ export default function GalleryUploader({
 
   const removeAt = (index: number) => onChange(value.filter((_, i) => i !== index));
 
+  // Rename a whole group: every photo currently in `oldName` moves to `next`
+  // together, so changing a group name never scatters its photos.
+  function renameGroup(oldName: string, next: string) {
+    onChange(value.map((item) => ((item.group ?? '').trim() === oldName ? { ...item, group: next } : item)));
+  }
+
+  function selectGroup(index: number, choice: string) {
+    if (choice === NEW_GROUP) {
+      const name = window.prompt('New group name')?.trim();
+      if (name) patchAt(index, { group: name });
+    } else if (choice === UNGROUPED) {
+      patchAt(index, { group: '' });
+    } else {
+      patchAt(index, { group: choice });
+    }
+  }
+
   const groups = groupGallery(value);
+  const groupNames = groups.map((g) => g.name).filter(Boolean);
   const lightboxImages = value.map((it) => ({ src: resolveAsset(it.url) ?? '', caption: it.caption }));
 
   return (
@@ -57,12 +109,18 @@ export default function GalleryUploader({
       <div className="space-y-5">
         {groups.map((group) => (
           <div key={group.name || '__ungrouped'}>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wide text-accent-soft">
-                {group.name || 'Ungrouped'}
-              </span>
-              <span className="text-xs text-slate-600">· {group.entries.length}</span>
-            </div>
+            {group.name ? (
+              <GroupHeader
+                name={group.name}
+                count={group.entries.length}
+                onRename={(next) => renameGroup(group.name, next)}
+              />
+            ) : (
+              <div className="mb-2 flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ungrouped</span>
+                <span className="text-xs text-slate-600">· {group.entries.length}</span>
+              </div>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-2">
               {group.entries.map(({ item, index }, pos) => (
@@ -105,14 +163,20 @@ export default function GalleryUploader({
                       placeholder="Caption (optional)"
                       className="min-w-0 rounded-lg border border-line bg-bg px-3 py-1.5 text-sm text-white outline-none placeholder:text-slate-600 focus:border-accent/60"
                     />
-                    <input
-                      type="text"
-                      value={item.group ?? ''}
-                      onChange={(e) => patchAt(index, { group: e.target.value })}
-                      placeholder="Group (e.g. Admin panel)"
-                      list="gallery-groups"
-                      className="min-w-0 rounded-lg border border-line bg-bg px-3 py-1.5 text-xs text-slate-300 outline-none placeholder:text-slate-600 focus:border-accent/60"
-                    />
+                    <select
+                      value={(item.group ?? '').trim() || UNGROUPED}
+                      onChange={(e) => selectGroup(index, e.target.value)}
+                      aria-label="Photo group"
+                      className="min-w-0 rounded-lg border border-line bg-bg px-2 py-1.5 text-xs text-slate-300 outline-none focus:border-accent/60"
+                    >
+                      <option value={UNGROUPED}>Ungrouped</option>
+                      {groupNames.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                      <option value={NEW_GROUP}>＋ New group…</option>
+                    </select>
                   </div>
 
                   <button
@@ -139,11 +203,6 @@ export default function GalleryUploader({
         </button>
       </div>
 
-      {/* Shared datalist so typed group names autocomplete across items. */}
-      <datalist id="gallery-groups">
-        {groups.map((g) => g.name && <option key={g.name} value={g.name} />)}
-      </datalist>
-
       <input
         ref={fileRef}
         type="file"
@@ -157,7 +216,7 @@ export default function GalleryUploader({
       />
 
       <p className={`mt-2 text-xs ${status ? 'text-slate-400' : 'text-slate-600'}`}>
-        {status || `${IMAGE_HINT} · drag the grip to reorder · set a Group to section photos`}
+        {status || `${IMAGE_HINT} · drag the grip to reorder · pick a group, or rename a group in its heading`}
       </p>
 
       {lightbox !== null && (
