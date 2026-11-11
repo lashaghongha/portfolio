@@ -75,14 +75,14 @@ export default function GalleryUploader({
                 >
                   <div className="group relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-bg">
                     <img src={resolveAsset(item.url) ?? ''} alt="" className="h-full w-full object-cover" />
-                    <span className="absolute left-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-black/70 px-1 text-[11px] font-semibold text-white">
+                    <span className="absolute left-1 top-1 z-20 grid h-5 min-w-5 place-items-center rounded-full bg-black/70 px-1 text-[11px] font-semibold text-white">
                       {pos + 1}
                     </span>
                     <button
                       type="button"
                       onClick={() => setLightbox(index)}
                       aria-label="Enlarge photo"
-                      className="absolute inset-0 grid place-items-center bg-black/50 text-white opacity-0 transition-opacity hover:opacity-100"
+                      className="absolute inset-0 z-0 grid place-items-center bg-black/50 text-white opacity-0 transition-opacity hover:opacity-100"
                     >
                       <Maximize2 size={18} />
                     </button>
@@ -90,7 +90,8 @@ export default function GalleryUploader({
                       type="button"
                       onClick={() => removeAt(index)}
                       aria-label="Remove photo"
-                      className="absolute right-1 top-1 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white opacity-0 transition-opacity hover:bg-red-600 group-hover:opacity-100"
+                      title="Remove photo"
+                      className="absolute right-1 top-1 z-20 grid h-6 w-6 place-items-center rounded-full bg-black/70 text-white transition-colors hover:bg-red-600"
                     >
                       <X size={13} />
                     </button>
