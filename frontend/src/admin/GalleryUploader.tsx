@@ -65,7 +65,7 @@ export default function GalleryUploader({
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              {group.entries.map(({ item, index }) => (
+              {group.entries.map(({ item, index }, pos) => (
                 <div
                   key={`${item.url}-${index}`}
                   {...getContainerProps(index)}
@@ -75,6 +75,9 @@ export default function GalleryUploader({
                 >
                   <div className="group relative aspect-video w-28 shrink-0 overflow-hidden rounded-md bg-bg">
                     <img src={resolveAsset(item.url) ?? ''} alt="" className="h-full w-full object-cover" />
+                    <span className="absolute left-1 top-1 grid h-5 min-w-5 place-items-center rounded-full bg-black/70 px-1 text-[11px] font-semibold text-white">
+                      {pos + 1}
+                    </span>
                     <button
                       type="button"
                       onClick={() => setLightbox(index)}

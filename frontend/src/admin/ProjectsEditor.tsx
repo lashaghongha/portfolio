@@ -79,7 +79,12 @@ function ProjectCard({ initial, order, onSaved, onDeleted, handleProps, containe
     >
       {handleProps && (
         <div className="mb-3 flex items-center justify-between border-b border-line pb-3">
-          <span className="text-sm font-medium text-slate-300">{draft.title || 'Untitled project'}</span>
+          <span className="flex items-center gap-2 text-sm font-medium text-slate-300">
+            <span className="grid h-6 min-w-6 place-items-center rounded-full bg-accent/15 px-1.5 text-xs font-semibold text-accent-soft">
+              {order}
+            </span>
+            {draft.title || 'Untitled project'}
+          </span>
           <button
             type="button"
             {...handleProps}
