@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Save, Trash2, Plus } from 'lucide-react';
+import type { DragEvent } from 'react';
+import { Save, Trash2, Plus, GripVertical } from 'lucide-react';
 import type { Project } from '../lib/api';
 import {
   adminGetProjects, createProject, updateProject, deleteProject,
@@ -8,8 +9,21 @@ import { Field, TextInput, TextArea, Toggle, Section } from './ui';
 import ImageUploader from './ImageUploader';
 import GalleryUploader from './GalleryUploader';
 import SpecsEditor from './SpecsEditor';
+import { useDragReorder } from '../hooks/useDragReorder';
 
 type Draft = Omit<Project, 'id'> & { id: number | null };
+
+type DragHandleProps = {
+  draggable: boolean;
+  onDragStart: (e: DragEvent) => void;
+  onDragEnd: () => void;
+};
+
+type ContainerProps = {
+  onDragEnter: () => void;
+  onDragOver: (e: DragEvent) => void;
+  onDrop: (e: DragEvent) => void;
+};
 
 const empty: Draft = {
   id: null, title: '', description: '', icon: 'sparkles', accent: 'violet',
@@ -18,8 +32,14 @@ const empty: Draft = {
 
 const accents = ['violet', 'blue', 'green', 'orange'];
 
-function ProjectCard({ initial, onSaved, onDeleted }: {
-  initial: Draft; onSaved: (p: Project) => void; onDeleted: (id: number | null) => void;
+function ProjectCard({ initial, order, onSaved, onDeleted, handleProps, containerProps, isOver }: {
+  initial: Draft;
+  order?: number;
+  onSaved: (p: Project) => void;
+  onDeleted: (id: number | null) => void;
+  handleProps?: DragHandleProps;
+  containerProps?: ContainerProps;
+  isOver?: boolean;
 }) {
   const [draft, setDraft] = useState<Draft>(initial);
   const [tagsText, setTagsText] = useState(initial.tags.join(', '));
@@ -30,7 +50,9 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
 
   async function save() {
     setBusy(true); setStatus('');
-    const payload = { ...draft, tags: tagsText.split(',').map((t) => t.trim()).filter(Boolean) };
+    // Sort order is owned by the list (drag-to-reorder), not this card.
+    const sortOrder = order ?? draft.sortOrder;
+    const payload = { ...draft, sortOrder, tags: tagsText.split(',').map((t) => t.trim()).filter(Boolean) };
     try {
       const saved = draft.id == null
         ? await createProject(payload)
@@ -51,7 +73,24 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
   }
 
   return (
-    <div className="card-surface p-5">
+    <div
+      {...containerProps}
+      className={`card-surface p-5 transition-colors ${isOver ? 'border-accent' : ''}`}
+    >
+      {handleProps && (
+        <div className="mb-3 flex items-center justify-between border-b border-line pb-3">
+          <span className="text-sm font-medium text-slate-300">{draft.title || 'Untitled project'}</span>
+          <button
+            type="button"
+            {...handleProps}
+            aria-label="Drag to reorder"
+            title="Drag to reorder"
+            className="flex cursor-grab items-center gap-1.5 rounded-md px-2 py-1 text-xs text-slate-500 hover:text-slate-300 active:cursor-grabbing"
+          >
+            <GripVertical size={15} /> Drag
+          </button>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-[200px_1fr]">
         <Section title="Cover image" hint="16:9">
           <ImageUploader value={draft.imageUrl} onChange={(url) => set({ imageUrl: url })} />
@@ -82,8 +121,6 @@ function ProjectCard({ initial, onSaved, onDeleted }: {
                   {accents.map((a) => <option key={a} value={a}>{a}</option>)}
                 </select>
               </Field>
-              <Field label="Order"><TextInput type="number" value={draft.sortOrder}
-                onChange={(e) => set({ sortOrder: Number(e.target.value) })} className="w-20" /></Field>
               <div className="pt-5"><Toggle checked={draft.featured} onChange={(v) => set({ featured: v })} label="Featured" /></div>
             </div>
           </Section>
@@ -120,6 +157,7 @@ export default function ProjectsEditor() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [orderStatus, setOrderStatus] = useState('');
 
   useEffect(() => {
     adminGetProjects().then((p) => { setProjects(p); setLoaded(true); }).catch(() => setLoaded(true));
@@ -130,22 +168,49 @@ export default function ProjectsEditor() {
       ? list.map((p) => (p.id === saved.id ? saved : p))
       : [...list, saved]);
 
+  // Drag-to-reorder: renumber sortOrder to match the new order and persist the
+  // rows that actually moved.
+  async function handleReorder(next: Project[]) {
+    const renumbered = next.map((p, i) => ({ ...p, sortOrder: i + 1 }));
+    const changed = renumbered.filter((p, i) => next[i].sortOrder !== p.sortOrder);
+    setProjects(renumbered);
+    if (changed.length === 0) return;
+    setOrderStatus('Saving order…');
+    try {
+      await Promise.all(changed.map((p) => updateProject(p.id, p)));
+      setOrderStatus('Order saved.');
+    } catch {
+      setOrderStatus('Could not save order — try again.');
+    }
+  }
+
+  const { overIndex, getHandleProps, getContainerProps } = useDragReorder(projects, handleReorder);
+
   return (
     <div className="space-y-4">
-      <button onClick={() => setDrafts((d) => [{ ...empty }, ...d])} className="btn-primary !py-2 text-sm">
-        <Plus size={16} /> Add Project
-      </button>
+      <div className="flex items-center gap-3">
+        <button onClick={() => setDrafts((d) => [{ ...empty }, ...d])} className="btn-primary !py-2 text-sm">
+          <Plus size={16} /> Add Project
+        </button>
+        {projects.length > 1 && (
+          <span className="text-xs text-slate-500">Drag the grip on a card to reorder.</span>
+        )}
+        {orderStatus && <span className="text-xs text-slate-400">{orderStatus}</span>}
+      </div>
 
       {drafts.map((d, i) => (
-        <ProjectCard key={`draft-${i}`} initial={d}
+        <ProjectCard key={`draft-${i}`} initial={d} order={projects.length + 1}
           onSaved={(saved) => { upsert(saved); setDrafts((list) => list.filter((_, idx) => idx !== i)); }}
           onDeleted={() => setDrafts((list) => list.filter((_, idx) => idx !== i))} />
       ))}
 
       {!loaded && <p className="text-slate-500">Loading…</p>}
 
-      {projects.map((p) => (
-        <ProjectCard key={p.id} initial={{ ...p }}
+      {projects.map((p, i) => (
+        <ProjectCard key={p.id} initial={{ ...p }} order={i + 1}
+          handleProps={getHandleProps(i)}
+          containerProps={getContainerProps(i)}
+          isOver={overIndex === i}
           onSaved={upsert}
           onDeleted={(id) => setProjects((list) => list.filter((x) => x.id !== id))} />
       ))}

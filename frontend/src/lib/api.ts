@@ -17,6 +17,7 @@ export interface Profile {
 export interface GalleryItem {
   url: string;
   caption?: string | null;
+  group?: string | null;
 }
 
 export interface SpecRow {

@@ -5,6 +5,14 @@ import { GithubIcon } from '../lib/brand-icons';
 import { getProject, safeUrl, type Project } from '../lib/api';
 import { resolveIcon, accent } from '../lib/icons';
 import { resolveAsset } from '../lib/admin-api';
+import { groupGallery } from '../lib/gallery';
+import Lightbox from '../components/Lightbox';
+
+interface GalleryImage {
+  src: string;
+  caption: string;
+  group: string;
+}
 
 type LoadState = 'loading' | 'loaded' | 'notfound' | 'error';
 
@@ -84,17 +92,23 @@ export default function ProjectDetail() {
 
 function ProjectView({ project }: { project: Project }) {
   const [expanded, setExpanded] = useState(false);
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const Icon = resolveIcon(project.icon);
   const a = accent(project.accent);
   const image = resolveAsset(project.imageUrl);
   const repo = safeUrl(project.repoUrl);
   const live = safeUrl(project.liveUrl);
-  const gallery = project.gallery
-    .map((item) => ({ src: resolveAsset(item.url), caption: item.caption?.trim() || '' }))
-    .filter((item): item is { src: string; caption: string } => Boolean(item.src));
+  const gallery: GalleryImage[] = project.gallery
+    .map((item) => ({
+      src: resolveAsset(item.url),
+      caption: item.caption?.trim() || '',
+      group: (item.group ?? '').trim(),
+    }))
+    .filter((item): item is GalleryImage => Boolean(item.src));
   const specs = project.specs.filter((row) => row.label.trim() || row.value.trim());
+  const groups = groupGallery(gallery);
+  const isGrouped = groups.length > 1 || (groups.length === 1 && Boolean(groups[0].name));
   const hasMore = gallery.length > GALLERY_PREVIEW_COUNT;
-  const visibleGallery = expanded ? gallery : gallery.slice(0, GALLERY_PREVIEW_COUNT);
 
   return (
     <article className="mx-auto max-w-4xl">
@@ -174,33 +188,81 @@ function ProjectView({ project }: { project: Project }) {
       {gallery.length > 0 && (
         <div className="mt-12">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Gallery</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {visibleGallery.map((item, i) => (
-              <figure key={i} className="space-y-2">
-                <div className="aspect-video overflow-hidden rounded-2xl border border-line bg-bg-soft">
-                  <img
-                    src={item.src}
-                    alt={item.caption || `${project.title} screenshot ${i + 1}`}
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                </div>
-                {item.caption && (
-                  <figcaption className="text-sm text-slate-400">{item.caption}</figcaption>
-                )}
-              </figure>
-            ))}
-          </div>
 
-          {hasMore && (
-            <div className="mt-6 flex justify-center">
-              <button type="button" onClick={() => setExpanded((v) => !v)} className="btn-ghost">
-                {expanded ? 'View less' : `View more (${gallery.length - GALLERY_PREVIEW_COUNT})`}
-              </button>
+          {isGrouped ? (
+            <div className="mt-4 space-y-8">
+              {groups.map((group) => (
+                <div key={group.name || '__ungrouped'}>
+                  {group.name && (
+                    <h3 className="mb-3 text-base font-semibold text-white">{group.name}</h3>
+                  )}
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {group.entries.map(({ item, index }) => (
+                      <GalleryFigure key={index} item={item} position={index} title={project.title} onOpen={setLightbox} />
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
+          ) : (
+            <>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {(expanded ? gallery : gallery.slice(0, GALLERY_PREVIEW_COUNT)).map((item, i) => (
+                  <GalleryFigure key={i} item={item} position={i} title={project.title} onOpen={setLightbox} />
+                ))}
+              </div>
+
+              {hasMore && (
+                <div className="mt-6 flex justify-center">
+                  <button type="button" onClick={() => setExpanded((v) => !v)} className="btn-ghost">
+                    {expanded ? 'View less' : `View more (${gallery.length - GALLERY_PREVIEW_COUNT})`}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
+
+      {lightbox !== null && (
+        <Lightbox
+          images={gallery}
+          index={lightbox}
+          onClose={() => setLightbox(null)}
+          onIndexChange={setLightbox}
+        />
+      )}
     </article>
+  );
+}
+
+function GalleryFigure({
+  item,
+  position,
+  title,
+  onOpen,
+}: {
+  item: GalleryImage;
+  position: number;
+  title: string;
+  onOpen: (index: number) => void;
+}) {
+  return (
+    <figure className="space-y-2">
+      <button
+        type="button"
+        onClick={() => onOpen(position)}
+        className="group block aspect-video w-full overflow-hidden rounded-2xl border border-line bg-bg-soft"
+        aria-label={`Enlarge ${item.caption || title}`}
+      >
+        <img
+          src={item.src}
+          alt={item.caption || `${title} screenshot ${position + 1}`}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+      </button>
+      {item.caption && <figcaption className="text-sm text-slate-400">{item.caption}</figcaption>}
+    </figure>
   );
 }

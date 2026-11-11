@@ -20,10 +20,13 @@ public class Project
 }
 
 // A single gallery screenshot with an optional caption shown on the detail page.
+// Group lets screenshots be organised into labelled sections (e.g. "Storefront",
+// "Admin panel") on both the admin editor and the public project page.
 public class GalleryItem
 {
     public string Url { get; set; } = string.Empty;
     public string? Caption { get; set; }
+    public string? Group { get; set; }
 }
 
 // One row of the project's spec/tech-stack table (e.g. Label "Backend", Value "ASP.NET Core 9").

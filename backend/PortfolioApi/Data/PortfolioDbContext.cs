@@ -99,7 +99,8 @@ public class PortfolioDbContext : DbContext
                 {
                     var url = ReadString(element, "url") ?? ReadString(element, "Url") ?? string.Empty;
                     var caption = ReadString(element, "caption") ?? ReadString(element, "Caption");
-                    items.Add(new GalleryItem { Url = url, Caption = caption });
+                    var group = ReadString(element, "group") ?? ReadString(element, "Group");
+                    items.Add(new GalleryItem { Url = url, Caption = caption, Group = group });
                 }
             }
             return items;
