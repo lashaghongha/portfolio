@@ -5,6 +5,10 @@ export interface Profile {
   role: string;
   tagline: string;
   bio: string;
+  about: string;
+  photoUrl: string | null;
+  cvUrl: string | null;
+  location: string;
   githubUrl: string;
   linkedInUrl: string;
   email: string;

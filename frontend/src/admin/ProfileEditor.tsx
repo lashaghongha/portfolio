@@ -3,6 +3,8 @@ import { Save } from 'lucide-react';
 import { getProfile, type Profile } from '../lib/api';
 import { updateProfile } from '../lib/admin-api';
 import { Field, TextInput, TextArea } from './ui';
+import ImageUploader from './ImageUploader';
+import CvUploader from './CvUploader';
 
 export default function ProfileEditor() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -39,7 +41,28 @@ export default function ProfileEditor() {
         <Field label="Role"><TextInput value={profile.role} onChange={(e) => set({ role: e.target.value })} /></Field>
       </div>
       <Field label="Tagline"><TextInput value={profile.tagline} onChange={(e) => set({ tagline: e.target.value })} /></Field>
-      <Field label="Bio"><TextArea value={profile.bio} onChange={(e) => set({ bio: e.target.value })} /></Field>
+      <Field label="Bio (short, shown in the hero)"><TextArea value={profile.bio} onChange={(e) => set({ bio: e.target.value })} /></Field>
+
+      <div className="grid gap-5 sm:grid-cols-[180px_1fr]">
+        <Field label="Profile photo">
+          <ImageUploader aspect="square" value={profile.photoUrl} onChange={(photoUrl) => set({ photoUrl })} />
+        </Field>
+        <Field label="About (longer, shown in the About section)">
+          <TextArea
+            value={profile.about}
+            onChange={(e) => set({ about: e.target.value })}
+            rows={7}
+            placeholder="Write a few paragraphs about yourself, your experience and what you build…"
+          />
+        </Field>
+      </div>
+
+      <Field label="Location"><TextInput value={profile.location} onChange={(e) => set({ location: e.target.value })} placeholder="Tbilisi, Georgia" /></Field>
+
+      <Field label="CV / Resume (PDF)">
+        <CvUploader value={profile.cvUrl} onChange={(cvUrl) => set({ cvUrl })} />
+      </Field>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="GitHub URL"><TextInput value={profile.githubUrl} onChange={(e) => set({ githubUrl: e.target.value })} /></Field>
         <Field label="LinkedIn URL"><TextInput value={profile.linkedInUrl} onChange={(e) => set({ linkedInUrl: e.target.value })} /></Field>

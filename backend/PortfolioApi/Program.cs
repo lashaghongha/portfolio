@@ -9,6 +9,7 @@ using PortfolioApi.Auth;
 using PortfolioApi.Data;
 using PortfolioApi.Endpoints;
 using PortfolioApi.Models;
+using PortfolioApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,7 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddPortfolioDatabase(builder.Configuration);
 builder.Services.AddSingleton<TokenService>();
+builder.Services.AddSingleton<EmailSender>();
 
 // Admin Hub SSO: hub-ticket validator + single-use replay guard.
 builder.Services.AddMemoryCache();
@@ -195,7 +197,7 @@ api.MapGet("/images/{id:int}", async (int id, PortfolioDbContext db, HttpContext
 api.MapGet("/skills", async (PortfolioDbContext db) =>
     Results.Ok(await db.Skills.OrderBy(s => s.SortOrder).ThenBy(s => s.Id).ToListAsync()));
 
-api.MapPost("/contact", (ContactMessage message) =>
+api.MapPost("/contact", async (ContactMessage message, EmailSender email) =>
 {
     var validationResults = new List<ValidationResult>();
     var context = new ValidationContext(message);
@@ -207,7 +209,16 @@ api.MapPost("/contact", (ContactMessage message) =>
         return Results.ValidationProblem(errors);
     }
 
-    app.Logger.LogInformation("Contact message from {Name} <{Email}>", message.Name, message.Email);
+    try
+    {
+        await email.SendContactAsync(message.Name, message.Email, message.Message);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to send contact email from {Name} <{Email}>", message.Name, message.Email);
+        return Results.Problem("Could not send your message right now. Please email directly.", statusCode: 502);
+    }
+
     return Results.Ok(new { success = true, message = "Thanks! Your message has been received." });
 });
 

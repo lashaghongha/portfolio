@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Navbar from './components/Navbar';
 import CursorGlow from './components/CursorGlow';
 import Hero from './components/Hero';
+import About from './components/About';
 import Stats from './components/Stats';
 import Projects from './components/Projects';
 import Skills from './components/Skills';
@@ -48,8 +49,9 @@ export default function App() {
         <Navbar profile={profile} />
         <main>
           <Hero profile={profile} />
-          <Projects projects={projects} />
+          <About profile={profile} />
           <Stats stats={stats} />
+          <Projects projects={projects} />
           <Skills skills={skills} />
           <Contact profile={profile} />
         </main>

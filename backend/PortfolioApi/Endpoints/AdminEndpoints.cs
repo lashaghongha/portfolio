@@ -8,6 +8,7 @@ public static class AdminEndpoints
 {
     private static readonly string[] AllowedImageExtensions = { ".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg" };
     private const long MaxImageBytes = 5 * 1024 * 1024;
+    private const long MaxDocumentBytes = 10 * 1024 * 1024;
 
     private static string ContentTypeFor(string ext) => ext switch
     {
@@ -37,6 +38,10 @@ public static class AdminEndpoints
                 profile.Role = input.Role;
                 profile.Tagline = input.Tagline;
                 profile.Bio = input.Bio;
+                profile.About = input.About;
+                profile.PhotoUrl = input.PhotoUrl;
+                profile.CvUrl = input.CvUrl;
+                profile.Location = input.Location;
                 profile.GithubUrl = input.GithubUrl;
                 profile.LinkedInUrl = input.LinkedInUrl;
                 profile.Email = input.Email;
@@ -178,6 +183,33 @@ public static class AdminEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { url = $"/api/images/{image.Id}" });
+        }).DisableAntiforgery();
+
+        // ---- CV / document upload (PDF, stored in DB like images) ----
+        admin.MapPost("/upload-cv", async (IFormFile? file, PortfolioDbContext db) =>
+        {
+            if (file is null || file.Length == 0)
+                return Results.BadRequest(new { error = "No file provided." });
+            if (file.Length > MaxDocumentBytes)
+                return Results.BadRequest(new { error = "File too large (max 10MB)." });
+
+            var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext != ".pdf")
+                return Results.BadRequest(new { error = "Only PDF files are allowed." });
+
+            using var ms = new MemoryStream();
+            await file.CopyToAsync(ms);
+
+            var doc = new StoredImage
+            {
+                ContentType = "application/pdf",
+                Data = ms.ToArray(),
+                CreatedAt = DateTime.UtcNow,
+            };
+            db.Images.Add(doc);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { url = $"/api/images/{doc.Id}" });
         }).DisableAntiforgery();
     }
 }

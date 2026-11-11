@@ -101,3 +101,26 @@ export async function uploadImage(file: File): Promise<string> {
   const data = (await res.json()) as { url: string };
   return data.url;
 }
+
+// ---- CV / PDF upload ----
+export async function uploadCv(file: File): Promise<string> {
+  const token = getToken();
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${API_BASE}/api/admin/upload-cv`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: form,
+  });
+  if (res.status === 401) {
+    logout();
+    throw new Error('Session expired. Please log in again.');
+  }
+  if (!res.ok) {
+    const problem = await res.json().catch(() => null);
+    throw new Error(problem?.error ?? 'Upload failed.');
+  }
+  const data = (await res.json()) as { url: string };
+  return data.url;
+}

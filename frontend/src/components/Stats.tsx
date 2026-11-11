@@ -8,7 +8,7 @@ export default function Stats({ stats }: { stats: Stat[] }) {
   if (!stats.length) return null;
 
   return (
-    <section id="about" className="container-px py-8">
+    <section id="stats" className="container-px py-8">
       <div
         ref={ref}
         className={`card-surface grid grid-cols-2 divide-x divide-y divide-line overflow-hidden sm:grid-cols-4 sm:divide-y-0 ${

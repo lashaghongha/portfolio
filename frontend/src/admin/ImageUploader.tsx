@@ -13,12 +13,20 @@ export function validateImageFile(file: File): string | null {
   return null;
 }
 
+const ASPECT_CLASS = {
+  video: 'aspect-video',
+  square: 'aspect-square',
+  portrait: 'aspect-[3/4]',
+} as const;
+
 export default function ImageUploader({
   value,
   onChange,
+  aspect = 'video',
 }: {
   value: string | null;
   onChange: (url: string | null) => void;
+  aspect?: keyof typeof ASPECT_CLASS;
 }) {
   const [status, setStatus] = useState('');
   const [busy, setBusy] = useState(false);
@@ -65,7 +73,7 @@ export default function ImageUploader({
         role="button"
         tabIndex={0}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileRef.current?.click()}
-        className={`relative grid aspect-video cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed transition-colors ${
+        className={`relative grid ${ASPECT_CLASS[aspect]} cursor-pointer place-items-center overflow-hidden rounded-lg border border-dashed transition-colors ${
           dragging ? 'border-accent bg-accent/10' : 'border-line bg-bg-soft hover:border-accent/50'
         }`}
       >

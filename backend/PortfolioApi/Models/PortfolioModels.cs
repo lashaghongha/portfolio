@@ -68,6 +68,20 @@ public class Profile
     public string Role { get; set; } = string.Empty;
     public string Tagline { get; set; } = string.Empty;
     public string Bio { get; set; } = string.Empty;
+
+    // Longer narrative shown in the dedicated "About" section (CV-style content).
+    public string About { get; set; } = string.Empty;
+
+    // Optional uploaded profile photo (served via /api/images/{id}); falls back to
+    // name initials when null. Used by the navbar avatar and the About section.
+    public string? PhotoUrl { get; set; }
+
+    // Optional uploaded CV/resume file (PDF) exposed as a download button.
+    public string? CvUrl { get; set; }
+
+    // Short location line (e.g. "Tbilisi, Georgia") shown as an About quick-fact.
+    public string Location { get; set; } = string.Empty;
+
     public string GithubUrl { get; set; } = string.Empty;
     public string LinkedInUrl { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

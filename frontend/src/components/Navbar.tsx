@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../lib/brand-icons';
 import type { Profile } from '../lib/api';
+import { resolveAsset } from '../lib/admin-api';
 import { DEFAULT_NAME, getInitials } from '../lib/profile';
 
 const links = [
@@ -16,6 +17,7 @@ export default function Navbar({ profile }: { profile: Profile | null }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const initials = getInitials(profile?.name);
+  const photo = resolveAsset(profile?.photoUrl ?? null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -32,9 +34,17 @@ export default function Navbar({ profile }: { profile: Profile | null }) {
     >
       <nav className="container-px flex h-16 items-center justify-between" aria-label="Main navigation">
         <a href="#home" className="flex items-center gap-3">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent-glow to-accent font-black text-white shadow-glow">
-            {initials}
-          </span>
+          {photo ? (
+            <img
+              src={photo}
+              alt={profile?.name ?? 'Profile'}
+              className="h-10 w-10 rounded-xl object-cover shadow-glow ring-1 ring-accent/40"
+            />
+          ) : (
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent-glow to-accent font-black text-white shadow-glow">
+              {initials}
+            </span>
+          )}
           <span className="hidden flex-col leading-tight sm:flex">
             <span className="font-bold text-white">{profile?.name ?? DEFAULT_NAME}</span>
             <span className="text-xs text-slate-500">{profile?.role ?? 'Full Stack Developer'}</span>

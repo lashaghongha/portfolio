@@ -30,8 +30,15 @@ namespace PortfolioApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("About")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Bio")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CvUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Email")
@@ -46,8 +53,15 @@ namespace PortfolioApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhotoUrl")
                         .HasColumnType("text");
 
                     b.Property<string>("Role")
