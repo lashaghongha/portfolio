@@ -7,6 +7,7 @@ export default function Stickman({
   panic,
   climbing,
   startled,
+  worried,
   size = 40,
 }: {
   moving: boolean;
@@ -14,6 +15,7 @@ export default function Stickman({
   panic: boolean;
   climbing: boolean;
   startled: boolean;
+  worried: boolean;
   size?: number;
 }) {
   return (
@@ -21,7 +23,7 @@ export default function Stickman({
       width={(size * 24) / 40}
       height={size}
       viewBox="0 0 24 40"
-      className={`${moving ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''} ${climbing ? 'sm-climb' : ''} ${startled ? 'sm-startled' : ''}`}
+      className={`${moving ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''} ${climbing ? 'sm-climb' : ''} ${startled ? 'sm-startled' : ''} ${worried ? 'sm-worried' : ''}`}
       style={{ overflow: 'visible' }}
       fill="none"
       stroke="white"
@@ -47,8 +49,8 @@ export default function Stickman({
       {/* front leg */}
       <line className="sm-limb sm-leg-2" x1="12" y1="24" x2="16" y2="37" />
 
-      {/* panic / startled shout */}
-      {(panic || startled) && (
+      {/* panic / startled / worried shout */}
+      {(panic || startled || worried) && (
         <text className="sm-emote" x="18" y="2" textAnchor="middle" fontSize="11" fontWeight="900" fill="#fbbf24" stroke="none">
           !
         </text>

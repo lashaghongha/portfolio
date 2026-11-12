@@ -57,7 +57,11 @@ export default function ProjectStickman({
   const [falling, setFalling] = useState(false);
   const [climbing, setClimbing] = useState(false);
   const [scared, setScared] = useState(false);
+  const [worried, setWorried] = useState(false);
+  const [dodge, setDodge] = useState(0);
+  const [fleeFacing, setFleeFacing] = useState(1);
   const pokeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const figureRef = useRef<HTMLDivElement>(null);
 
   function poke(e: PointerEvent) {
     e.stopPropagation();
@@ -71,6 +75,47 @@ export default function ProjectStickman({
   useEffect(() => () => {
     if (pokeTimer.current) clearTimeout(pokeTimer.current);
   }, []);
+
+  // Get nervous and dodge away when the cursor comes near.
+  useEffect(() => {
+    if (!enabled) return;
+    const RADIUS = 115;
+    const MAX_DODGE = 44;
+    let raf = 0;
+    let last: { cx: number; cy: number } | null = null;
+
+    function process() {
+      raf = 0;
+      const el = figureRef.current;
+      if (!el || !last) return;
+      const r = el.getBoundingClientRect();
+      const fx = r.left + r.width / 2;
+      const fy = r.top + r.height / 2;
+      const dx = fx - last.cx;
+      const dy = fy - last.cy;
+      const dist = Math.hypot(dx, dy);
+      if (dist < RADIUS) {
+        const strength = (RADIUS - dist) / RADIUS;
+        setWorried(true);
+        setDodge(Math.sign(dx || 1) * strength * MAX_DODGE);
+        setFleeFacing(dx >= 0 ? 1 : -1);
+      } else if (worried) {
+        setWorried(false);
+        setDodge(0);
+      }
+    }
+
+    function onMove(e: globalThis.PointerEvent) {
+      last = { cx: e.clientX, cy: e.clientY };
+      if (!raf) raf = requestAnimationFrame(process);
+    }
+
+    window.addEventListener('pointermove', onMove, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [enabled, worried]);
 
   // Enable only on wide layouts (cards sit in a row) and when motion is allowed.
   useEffect(() => {
@@ -298,24 +343,28 @@ export default function ProjectStickman({
       )}
 
       <div className="absolute left-0 top-0" style={{ transform: `translateX(${x}px)`, transition: `transform ${moveDur}ms ease-in-out` }}>
-        <div style={{ transform: `translate(-50%, calc(-100% + ${FEET}px)) scaleX(${facing})` }}>
-          <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''} ${climbing ? 'sm-climb-up' : ''}`}>
-            <div
-              className="sm-hit pointer-events-auto relative cursor-pointer"
-              onPointerDown={poke}
-              role="button"
-              aria-label="Poke the stickman"
-            >
-              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: 42, height: 56 }} aria-hidden />
-              <div className={scared ? 'sm-boing' : ''}>
-                <Stickman
-                  moving={moving}
-                  looking={looking}
-                  panic={teetering || falling}
-                  climbing={climbing}
-                  startled={scared}
-                  size={44}
-                />
+        <div style={{ transform: `translateX(${dodge}px)`, transition: 'transform 0.13s ease-out' }}>
+          <div style={{ transform: `translate(-50%, calc(-100% + ${FEET}px)) scaleX(${worried ? fleeFacing : facing})` }}>
+            <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''} ${climbing ? 'sm-climb-up' : ''}`}>
+              <div
+                ref={figureRef}
+                className="sm-hit pointer-events-auto relative cursor-pointer"
+                onPointerDown={poke}
+                role="button"
+                aria-label="Poke the stickman"
+              >
+                <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: 42, height: 56 }} aria-hidden />
+                <div className={scared ? 'sm-boing' : ''}>
+                  <Stickman
+                    moving={moving}
+                    looking={looking}
+                    panic={teetering || falling}
+                    climbing={climbing}
+                    startled={scared}
+                    worried={worried}
+                    size={44}
+                  />
+                </div>
               </div>
             </div>
           </div>
