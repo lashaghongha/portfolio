@@ -10,20 +10,11 @@ const MAX_WALK = 3500;
 const PEEK_MS = 2000;
 const POST_PEEK = 300;
 const PAUSE_MS = 400;
-const CRACK_MS = 520;
+const TEETER_MS = 650;
 const FALL_MS = 1100;
 const RESPAWN_PAUSE = 550;
 const LEG_STEP = '0.42s';
 const FEET = 13; // px below the grid top where the figure stands
-
-// Concrete debris that bursts out when the ground gives way.
-const CHUNKS = [
-  { x: -15, y: 0, s: 8, cx: '-32px', cr: '-175deg', d: '0ms' },
-  { x: 8, y: -1, s: 10, cx: '28px', cr: '195deg', d: '30ms' },
-  { x: -3, y: 3, s: 6, cx: '-9px', cr: '130deg', d: '55ms' },
-  { x: 14, y: 1, s: 8, cx: '15px', cr: '-120deg', d: '20ms' },
-  { x: 1, y: 4, s: 5, cx: '3px', cr: '95deg', d: '80ms' },
-];
 
 interface Spot {
   center: number;
@@ -33,9 +24,14 @@ interface Spot {
   id: number;
 }
 
-// Ambient stick figure: walks the project cards, lays a ladder over the gaps,
-// bends over to peek into a card (its cover crossfades to a real screenshot),
-// and at the end the concrete cracks and he tumbles through before respawning.
+interface Gap {
+  left: number;
+  width: number;
+}
+
+// Ambient stick figure: walks the project cards, lays a ladder "bridge" over the
+// gaps, bends over a card to peek (its cover crossfades to a real screenshot),
+// then steps back onto the bridge — which collapses, dropping him through the gap.
 export default function ProjectStickman({
   gridRef,
   projects,
@@ -54,8 +50,9 @@ export default function ProjectStickman({
   const [facing, setFacing] = useState(1);
   const [moving, setMoving] = useState(false);
   const [looking, setLooking] = useState(false);
-  const [ladder, setLadder] = useState<{ left: number; width: number } | null>(null);
-  const [cracking, setCracking] = useState(false);
+  const [ladder, setLadder] = useState<Gap | null>(null);
+  const [collapse, setCollapse] = useState<Gap | null>(null);
+  const [teetering, setTeetering] = useState(false);
   const [falling, setFalling] = useState(false);
 
   // Enable only on wide layouts (cards sit in a row) and when motion is allowed.
@@ -117,7 +114,7 @@ export default function ProjectStickman({
     return () => io.disconnect();
   }, [gridRef]);
 
-  // Walk / peek / fall state machine.
+  // Walk / peek / bridge-collapse state machine.
   useEffect(() => {
     if (!enabled || !active || spots.length < 2) return;
 
@@ -135,26 +132,27 @@ export default function ProjectStickman({
       }, ms);
     };
 
+    function gapBetween(i: number, j: number): Gap {
+      const a = spots[Math.min(i, j)];
+      const b = spots[Math.max(i, j)];
+      return { left: a.right, width: Math.max(8, b.left - a.right) };
+    }
+
+    function moveTo(targetX: number, dur: number) {
+      setMoving(true);
+      setMoveDur(dur);
+      setX(targetX);
+      pos.x = targetX;
+    }
+
     function walkTo(i: number, onArrive: () => void) {
       const target = spots[i];
       const dist = Math.abs(target.center - pos.x);
       const dur = Math.min(MAX_WALK, Math.max(MIN_WALK, (dist / SPEED) * 1000));
       if (dist > 3) setFacing(target.center >= pos.x ? 1 : -1);
-
-      if (Math.abs(i - pos.idx) === 1) {
-        const a = spots[Math.min(i, pos.idx)];
-        const b = spots[Math.max(i, pos.idx)];
-        const width = b.left - a.right;
-        setLadder(width > 4 ? { left: a.right, width } : null);
-      } else {
-        setLadder(null);
-      }
-
+      setLadder(Math.abs(i - pos.idx) === 1 ? gapBetween(i, pos.idx) : null);
       setLooking(false);
-      setMoving(true);
-      setMoveDur(dur);
-      setX(target.center);
-      pos.x = target.center;
+      moveTo(target.center, dur);
       pos.idx = i;
       wait(onArrive, dur);
     }
@@ -175,33 +173,47 @@ export default function ProjectStickman({
       }
     }
 
-    function fall(onDone: () => void) {
-      setMoving(false);
+    // Step back onto the last bridge; it gives way and he drops through the gap.
+    function collapseBridge(onDone: () => void) {
+      const gap = gapBetween(n - 2, n - 1);
+      const mid = gap.left + gap.width / 2;
+      const dist = Math.abs(mid - pos.x);
+      const dur = Math.min(MAX_WALK, Math.max(MIN_WALK, (dist / SPEED) * 1000));
+
+      setFacing(mid >= pos.x ? 1 : -1);
       setLooking(false);
-      setLadder(null);
-      onPeek(null);
-      setCracking(true);
+      setLadder(gap);
+      moveTo(mid, dur);
+      pos.idx = -1;
+
       wait(() => {
-        setCracking(false);
-        setFalling(true);
+        setMoving(false);
+        setLadder(null);
+        setCollapse(gap);
+        setTeetering(true);
         wait(() => {
-          setFalling(false);
-          // teleport off-screen left (instant) so he walks back in
-          setMoveDur(0);
-          setX(-50);
-          setFacing(1);
-          pos.x = -50;
-          pos.idx = 0;
-          wait(onDone, RESPAWN_PAUSE);
-        }, FALL_MS);
-      }, CRACK_MS);
+          setTeetering(false);
+          setFalling(true);
+          wait(() => {
+            setFalling(false);
+            setCollapse(null);
+            onPeek(null);
+            setMoveDur(0);
+            setX(-50);
+            setFacing(1);
+            pos.x = -50;
+            pos.idx = 0;
+            wait(onDone, RESPAWN_PAUSE);
+          }, FALL_MS);
+        }, TEETER_MS);
+      }, dur);
     }
 
     function runFrom(i: number) {
       walkTo(i, () =>
         peek(i, () => {
           if (i < n - 1) runFrom(i + 1);
-          else fall(() => runFrom(0));
+          else collapseBridge(() => runFrom(0));
         }),
       );
     }
@@ -220,56 +232,39 @@ export default function ProjectStickman({
 
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 z-20" style={{ ['--sm-step']: LEG_STEP } as CSSProperties}>
-      {ladder && !cracking && !falling && (
+      {ladder && !collapse && (
         <div className="absolute left-0 top-0" style={{ left: ladder.left, width: ladder.width, transform: `translateY(${FEET - 5}px)` }}>
           <Ladder width={ladder.width} />
         </div>
       )}
 
-      {(cracking || falling) && (
-        <div className="absolute left-0 top-0" style={{ transform: `translateX(${x}px)` }}>
-          <svg
-            className="sm-crack"
-            width="48"
-            height="16"
-            viewBox="0 0 48 16"
-            fill="none"
-            stroke="#cbd5e1"
-            strokeWidth="1"
-            strokeLinecap="round"
-            style={{ position: 'absolute', left: -24, top: FEET - 2 }}
+      {collapse && (
+        <>
+          <div
+            className={teetering || falling ? 'sm-bridge-l' : ''}
+            style={{ position: 'absolute', left: collapse.left, top: FEET - 5, width: collapse.width / 2, transformOrigin: 'left center' }}
           >
-            <path d="M24 2 L19 8 L21 15" />
-            <path d="M24 2 L29 7 L27 14" />
-            <path d="M24 2 L15 6 L9 12" />
-            <path d="M24 2 L33 5 L40 11" />
-            <path d="M24 2 L24 10" />
-          </svg>
-          {falling &&
-            CHUNKS.map((c, i) => (
-              <span
-                key={i}
-                className="sm-chunk absolute rounded-[1px] bg-slate-400"
-                style={
-                  {
-                    left: c.x,
-                    top: FEET + c.y,
-                    width: c.s,
-                    height: c.s,
-                    ['--cx']: c.cx,
-                    ['--cr']: c.cr,
-                    animationDelay: c.d,
-                  } as CSSProperties
-                }
-              />
-            ))}
-        </div>
+            <Ladder width={collapse.width / 2} />
+          </div>
+          <div
+            className={teetering || falling ? 'sm-bridge-r' : ''}
+            style={{
+              position: 'absolute',
+              left: collapse.left + collapse.width / 2,
+              top: FEET - 5,
+              width: collapse.width / 2,
+              transformOrigin: 'right center',
+            }}
+          >
+            <Ladder width={collapse.width / 2} />
+          </div>
+        </>
       )}
 
       <div className="absolute left-0 top-0" style={{ transform: `translateX(${x}px)`, transition: `transform ${moveDur}ms ease-in-out` }}>
         <div style={{ transform: `translate(-50%, calc(-100% + ${FEET}px)) scaleX(${facing})` }}>
-          <div className={`${cracking ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''}`}>
-            <Stickman moving={moving} looking={looking} size={44} />
+          <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''}`}>
+            <Stickman moving={moving} looking={looking} panic={teetering || falling} size={44} />
           </div>
         </div>
       </div>

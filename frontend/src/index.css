@@ -82,9 +82,16 @@
   animation: sm-arm-2 var(--sm-step, 0.5s) linear infinite;
 }
 
-/* Bend over the edge to peer down into the card. */
+/* Bend over the edge to peer in — with a comic double-take. */
 .sm-look .sm-upper {
-  transform: rotate(34deg);
+  animation: sm-peek 0.85s ease forwards;
+}
+@keyframes sm-peek {
+  0% { transform: rotate(0); }
+  18% { transform: rotate(46deg); }
+  34% { transform: rotate(18deg); }
+  52% { transform: rotate(42deg); }
+  100% { transform: rotate(33deg); }
 }
 
 @keyframes sm-leg-1 {
@@ -120,24 +127,76 @@
 }
 @keyframes sm-fall {
   0% { transform: translateY(0) rotate(0); opacity: 1; }
-  12% { transform: translateY(-5px) rotate(-12deg); opacity: 1; }
-  100% { transform: translateY(300px) rotate(220deg); opacity: 0; }
+  10% { transform: translateY(-16px) rotate(-20deg); opacity: 1; }
+  100% { transform: translateY(300px) rotate(760deg); opacity: 0; }
 }
 
-/* Concrete breaking apart. */
-.sm-crack {
-  animation: sm-crack-in 0.35s ease forwards;
+/* The bridge collapses: each half swings down from the card edge it hinges on. */
+.sm-bridge-l {
+  animation: sm-bridge-l 0.9s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
 }
-@keyframes sm-crack-in {
-  0% { opacity: 0; }
-  100% { opacity: 0.9; }
+.sm-bridge-r {
+  animation: sm-bridge-r 0.9s cubic-bezier(0.5, 0, 0.9, 0.5) forwards;
 }
-.sm-chunk {
-  animation: sm-chunk 1.1s cubic-bezier(0.4, 0, 0.9, 0.6) forwards;
+@keyframes sm-bridge-l {
+  0% { transform: rotate(0); opacity: 1; }
+  100% { transform: rotate(82deg) translateY(12px); opacity: 0.12; }
 }
-@keyframes sm-chunk {
-  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
-  100% { transform: translate(var(--cx, 0), 230px) rotate(var(--cr, 160deg)); opacity: 0; }
+@keyframes sm-bridge-r {
+  0% { transform: rotate(0); opacity: 1; }
+  100% { transform: rotate(-82deg) translateY(12px); opacity: 0.12; }
+}
+
+/* Comedy: googly eyes, panic flailing and a shout. */
+.sm-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+.sm-look .sm-eye,
+.sm-panic .sm-eye {
+  transform: scale(1.9);
+}
+.sm-panic .sm-arm-1 {
+  animation: sm-windmill 0.34s linear infinite;
+}
+.sm-panic .sm-arm-2 {
+  animation: sm-windmill 0.34s linear infinite reverse;
+}
+.sm-panic .sm-leg-1 {
+  animation: sm-kick-1 0.17s linear infinite;
+}
+.sm-panic .sm-leg-2 {
+  animation: sm-kick-2 0.17s linear infinite;
+}
+@keyframes sm-windmill {
+  to { transform: rotate(360deg); }
+}
+@keyframes sm-kick-1 {
+  0%, 100% { transform: rotate(36deg); }
+  50% { transform: rotate(-14deg); }
+}
+@keyframes sm-kick-2 {
+  0%, 100% { transform: rotate(-36deg); }
+  50% { transform: rotate(14deg); }
+}
+.sm-emote {
+  animation: sm-emote 0.4s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes sm-emote {
+  0% { opacity: 0; transform: translateY(4px) scale(0.2); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Bouncy walk. */
+.sm-moving {
+  animation: sm-bob var(--sm-step, 0.5s) linear infinite;
+}
+@keyframes sm-bob {
+  0%, 50%, 100% { transform: translateY(0); }
+  25%, 75% { transform: translateY(-2.5px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
