@@ -199,6 +199,44 @@
   25%, 75% { transform: translateY(-2.5px); }
 }
 
+/* Clawing back up the wall after the fall. */
+.sm-climb-up {
+  animation: sm-climb-up 1.7s cubic-bezier(0.5, 0.08, 0.5, 1) forwards;
+}
+@keyframes sm-climb-up {
+  0% { transform: translateY(155px); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.sm-climb .sm-arm-1 {
+  animation: sm-climb-arm-1 0.46s ease-in-out infinite;
+}
+.sm-climb .sm-arm-2 {
+  animation: sm-climb-arm-2 0.46s ease-in-out infinite;
+}
+.sm-climb .sm-leg-1 {
+  animation: sm-climb-leg-1 0.46s ease-in-out infinite;
+}
+.sm-climb .sm-leg-2 {
+  animation: sm-climb-leg-2 0.46s ease-in-out infinite;
+}
+@keyframes sm-climb-arm-1 {
+  0%, 100% { transform: rotate(-150deg); }
+  50% { transform: rotate(-35deg); }
+}
+@keyframes sm-climb-arm-2 {
+  0%, 100% { transform: rotate(35deg); }
+  50% { transform: rotate(150deg); }
+}
+@keyframes sm-climb-leg-1 {
+  0%, 100% { transform: rotate(48deg); }
+  50% { transform: rotate(-6deg); }
+}
+@keyframes sm-climb-leg-2 {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(48deg); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .sm-moving .sm-leg-1,
   .sm-moving .sm-leg-2,

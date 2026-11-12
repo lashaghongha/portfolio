@@ -12,7 +12,8 @@ const POST_PEEK = 300;
 const PAUSE_MS = 400;
 const TEETER_MS = 650;
 const FALL_MS = 1100;
-const RESPAWN_PAUSE = 550;
+const CLIMB_MS = 1700;
+const RESPAWN_PAUSE = 450;
 const LEG_STEP = '0.42s';
 const FEET = 13; // px below the grid top where the figure stands
 
@@ -54,6 +55,7 @@ export default function ProjectStickman({
   const [collapse, setCollapse] = useState<Gap | null>(null);
   const [teetering, setTeetering] = useState(false);
   const [falling, setFalling] = useState(false);
+  const [climbing, setClimbing] = useState(false);
 
   // Enable only on wide layouts (cards sit in a row) and when motion is allowed.
   useEffect(() => {
@@ -194,16 +196,19 @@ export default function ProjectStickman({
         wait(() => {
           setTeetering(false);
           setFalling(true);
+          onPeek(null);
           wait(() => {
+            // ...then claw back up the wall and carry on.
             setFalling(false);
             setCollapse(null);
-            onPeek(null);
-            setMoveDur(0);
-            setX(-50);
             setFacing(1);
-            pos.x = -50;
-            pos.idx = 0;
-            wait(onDone, RESPAWN_PAUSE);
+            setClimbing(true);
+            wait(() => {
+              setClimbing(false);
+              pos.x = mid;
+              pos.idx = n - 1; // avoid a bogus gap on the next walk
+              wait(onDone, RESPAWN_PAUSE);
+            }, CLIMB_MS);
           }, FALL_MS);
         }, TEETER_MS);
       }, dur);
@@ -263,8 +268,8 @@ export default function ProjectStickman({
 
       <div className="absolute left-0 top-0" style={{ transform: `translateX(${x}px)`, transition: `transform ${moveDur}ms ease-in-out` }}>
         <div style={{ transform: `translate(-50%, calc(-100% + ${FEET}px)) scaleX(${facing})` }}>
-          <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''}`}>
-            <Stickman moving={moving} looking={looking} panic={teetering || falling} size={44} />
+          <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''} ${climbing ? 'sm-climb-up' : ''}`}>
+            <Stickman moving={moving} looking={looking} panic={teetering || falling} climbing={climbing} size={44} />
           </div>
         </div>
       </div>

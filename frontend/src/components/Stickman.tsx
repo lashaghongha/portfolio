@@ -5,11 +5,13 @@ export default function Stickman({
   moving,
   looking,
   panic,
+  climbing,
   size = 40,
 }: {
   moving: boolean;
   looking: boolean;
   panic: boolean;
+  climbing: boolean;
   size?: number;
 }) {
   return (
@@ -17,7 +19,7 @@ export default function Stickman({
       width={(size * 24) / 40}
       height={size}
       viewBox="0 0 24 40"
-      className={`${moving ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''}`}
+      className={`${moving ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''} ${climbing ? 'sm-climb' : ''}`}
       style={{ overflow: 'visible' }}
       fill="none"
       stroke="white"
