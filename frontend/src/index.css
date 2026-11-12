@@ -51,6 +51,104 @@
   }
 }
 
+/* ---- Project stickman ---- */
+.sm-limb {
+  transform-box: view-box;
+}
+.sm-leg-1,
+.sm-leg-2 {
+  transform-origin: 12px 24px;
+}
+.sm-arm-1,
+.sm-arm-2 {
+  transform-origin: 12px 14px;
+}
+.sm-upper {
+  transform-box: view-box;
+  transform-origin: 12px 24px;
+  transition: transform 0.35s ease;
+}
+
+.sm-moving .sm-leg-1 {
+  animation: sm-leg-1 var(--sm-step, 0.5s) linear infinite;
+}
+.sm-moving .sm-leg-2 {
+  animation: sm-leg-2 var(--sm-step, 0.5s) linear infinite;
+}
+.sm-moving .sm-arm-1 {
+  animation: sm-arm-1 var(--sm-step, 0.5s) linear infinite;
+}
+.sm-moving .sm-arm-2 {
+  animation: sm-arm-2 var(--sm-step, 0.5s) linear infinite;
+}
+
+/* Bend over the edge to peer down into the card. */
+.sm-look .sm-upper {
+  transform: rotate(34deg);
+}
+
+@keyframes sm-leg-1 {
+  0%, 100% { transform: rotate(22deg); }
+  50% { transform: rotate(-22deg); }
+}
+@keyframes sm-leg-2 {
+  0%, 100% { transform: rotate(-22deg); }
+  50% { transform: rotate(22deg); }
+}
+@keyframes sm-arm-1 {
+  0%, 100% { transform: rotate(-18deg); }
+  50% { transform: rotate(18deg); }
+}
+@keyframes sm-arm-2 {
+  0%, 100% { transform: rotate(18deg); }
+  50% { transform: rotate(-18deg); }
+}
+
+/* Teeter on the cracking ground, then tumble through it. */
+.sm-shake {
+  animation: sm-shake 0.5s linear;
+}
+@keyframes sm-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-1.5px) rotate(-3deg); }
+  40% { transform: translateX(1.5px) rotate(3deg); }
+  60% { transform: translateX(-1px) rotate(-2deg); }
+  80% { transform: translateX(1px) rotate(2deg); }
+}
+.sm-fall {
+  animation: sm-fall 1.1s cubic-bezier(0.4, 0, 0.9, 0.6) forwards;
+}
+@keyframes sm-fall {
+  0% { transform: translateY(0) rotate(0); opacity: 1; }
+  12% { transform: translateY(-5px) rotate(-12deg); opacity: 1; }
+  100% { transform: translateY(300px) rotate(220deg); opacity: 0; }
+}
+
+/* Concrete breaking apart. */
+.sm-crack {
+  animation: sm-crack-in 0.35s ease forwards;
+}
+@keyframes sm-crack-in {
+  0% { opacity: 0; }
+  100% { opacity: 0.9; }
+}
+.sm-chunk {
+  animation: sm-chunk 1.1s cubic-bezier(0.4, 0, 0.9, 0.6) forwards;
+}
+@keyframes sm-chunk {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--cx, 0), 230px) rotate(var(--cr, 160deg)); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sm-moving .sm-leg-1,
+  .sm-moving .sm-leg-2,
+  .sm-moving .sm-arm-1,
+  .sm-moving .sm-arm-2 {
+    animation: none;
+  }
+}
+
 ::-webkit-scrollbar {
   width: 10px;
 }

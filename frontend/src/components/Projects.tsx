@@ -1,13 +1,15 @@
+import { useCallback, useRef, useState } from 'react';
 import { ArrowUpRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Project } from '../lib/api';
 import { resolveIcon, accent } from '../lib/icons';
 import { resolveAsset } from '../lib/admin-api';
 import { useReveal } from '../hooks/useReveal';
+import ProjectStickman from './ProjectStickman';
 
 const MAX_CARD_TAGS = 3;
 
-function ProjectCard({ project }: { project: Project }) {
+function ProjectCard({ project, peeking, peekSrc }: { project: Project; peeking: boolean; peekSrc: string | null }) {
   const Icon = resolveIcon(project.icon);
   const a = accent(project.accent);
   const image = resolveAsset(project.imageUrl);
@@ -33,6 +35,16 @@ function ProjectCard({ project }: { project: Project }) {
               <Icon size={28} />
             </div>
           </>
+        )}
+
+        {/* The stickman "peeks" at the site: the cover crossfades to a real screenshot. */}
+        {peekSrc && (
+          <img
+            src={peekSrc}
+            alt=""
+            aria-hidden
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${peeking ? 'opacity-100' : 'opacity-0'}`}
+          />
         )}
       </div>
 
@@ -67,7 +79,18 @@ function ProjectCard({ project }: { project: Project }) {
 }
 
 export default function Projects({ projects }: { projects: Project[] }) {
-  const { ref, visible } = useReveal(0.05);
+  const { ref: revealRef, visible } = useReveal(0.05);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [peekId, setPeekId] = useState<number | null>(null);
+
+  // The grid needs both the reveal callback ref and a stable ref for measuring.
+  const setGridRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      revealRef(el);
+      gridRef.current = el;
+    },
+    [revealRef],
+  );
 
   return (
     <section id="projects" className="relative container-px py-16 sm:py-20">
@@ -90,14 +113,25 @@ export default function Projects({ projects }: { projects: Project[] }) {
       </div>
 
       <div
-        ref={ref}
-        className={`grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${visible ? '' : 'opacity-0'}`}
+        ref={setGridRef}
+        className={`relative grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${visible ? '' : 'opacity-0'}`}
       >
         {projects.map((project, i) => (
-          <div key={project.id} className={visible ? 'animate-fade-up' : ''} style={{ animationDelay: `${i * 80}ms` }}>
-            <ProjectCard project={project} />
+          <div
+            key={project.id}
+            data-project-card
+            className={visible ? 'animate-fade-up' : ''}
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
+            <ProjectCard
+              project={project}
+              peeking={peekId === project.id}
+              peekSrc={resolveAsset(project.gallery?.[0]?.url ?? null)}
+            />
           </div>
         ))}
+
+        <ProjectStickman gridRef={gridRef} projects={projects} onPeek={setPeekId} />
       </div>
     </section>
   );
