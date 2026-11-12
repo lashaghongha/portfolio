@@ -214,16 +214,32 @@ export default function ProjectStickman({
       }, dur);
     }
 
-    function runFrom(i: number) {
-      walkTo(i, () =>
-        peek(i, () => {
-          if (i < n - 1) runFrom(i + 1);
-          else collapseBridge(() => runFrom(0));
-        }),
-      );
+    // Ping-pong across the cards so every gap gets a ladder in both directions.
+    // At the right end the bridge collapses; after climbing back he heads left.
+    let dir = 1;
+    function cycle() {
+      const i = pos.idx;
+      peek(i, () => {
+        if (dir === 1 && i === n - 1) {
+          collapseBridge(() => {
+            dir = -1;
+            walkTo(n - 2, cycle);
+          });
+          return;
+        }
+        let nextI = i + dir;
+        if (nextI < 0) {
+          dir = 1;
+          nextI = Math.min(1, n - 1);
+        } else if (nextI > n - 1) {
+          dir = -1;
+          nextI = Math.max(n - 2, 0);
+        }
+        walkTo(nextI, cycle);
+      });
     }
 
-    runFrom(0);
+    walkTo(0, cycle);
 
     return () => {
       cancelled = true;
