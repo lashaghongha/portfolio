@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import type { CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, PointerEvent } from 'react';
 import type { Project } from '../lib/api';
 import { resolveAsset } from '../lib/admin-api';
 import Stickman from './Stickman';
@@ -56,6 +56,21 @@ export default function ProjectStickman({
   const [teetering, setTeetering] = useState(false);
   const [falling, setFalling] = useState(false);
   const [climbing, setClimbing] = useState(false);
+  const [scared, setScared] = useState(false);
+  const pokeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function poke(e: PointerEvent) {
+    e.stopPropagation();
+    setScared(false);
+    // next frame re-enables so the squash-hop replays on every poke
+    requestAnimationFrame(() => setScared(true));
+    if (pokeTimer.current) clearTimeout(pokeTimer.current);
+    pokeTimer.current = setTimeout(() => setScared(false), 620);
+  }
+
+  useEffect(() => () => {
+    if (pokeTimer.current) clearTimeout(pokeTimer.current);
+  }, []);
 
   // Enable only on wide layouts (cards sit in a row) and when motion is allowed.
   useEffect(() => {
@@ -285,7 +300,24 @@ export default function ProjectStickman({
       <div className="absolute left-0 top-0" style={{ transform: `translateX(${x}px)`, transition: `transform ${moveDur}ms ease-in-out` }}>
         <div style={{ transform: `translate(-50%, calc(-100% + ${FEET}px)) scaleX(${facing})` }}>
           <div className={`${teetering ? 'sm-shake' : ''} ${falling ? 'sm-fall' : ''} ${climbing ? 'sm-climb-up' : ''}`}>
-            <Stickman moving={moving} looking={looking} panic={teetering || falling} climbing={climbing} size={44} />
+            <div
+              className="sm-hit pointer-events-auto relative cursor-pointer"
+              onPointerDown={poke}
+              role="button"
+              aria-label="Poke the stickman"
+            >
+              <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: 42, height: 56 }} aria-hidden />
+              <div className={scared ? 'sm-boing' : ''}>
+                <Stickman
+                  moving={moving}
+                  looking={looking}
+                  panic={teetering || falling}
+                  climbing={climbing}
+                  startled={scared}
+                  size={44}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
