@@ -1,7 +1,7 @@
 import { MapPin, Briefcase, BadgeCheck, Download, User } from 'lucide-react';
 import type { Profile } from '../lib/api';
 import { resolveAsset } from '../lib/admin-api';
-import { getInitials } from '../lib/profile';
+import { getInitials, cvDownloadName } from '../lib/profile';
 import { useReveal } from '../hooks/useReveal';
 
 const DEFAULT_ABOUT =
@@ -90,8 +90,20 @@ export default function About({ profile }: { profile: Profile | null }) {
 
           {cv && (
             <div className="mt-8">
-              <a href={cv} target="_blank" rel="noopener noreferrer" download className="btn-primary">
-                <Download size={18} /> Download CV
+              <a
+                href={cv}
+                target="_blank"
+                rel="noopener noreferrer"
+                download={cvDownloadName(profile?.name)}
+                className="group inline-flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/10 py-2.5 pl-2.5 pr-5 text-white transition-colors hover:border-accent/60 hover:bg-accent/15"
+              >
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent-glow to-accent text-white shadow-glow transition-transform group-hover:-translate-y-0.5">
+                  <Download size={18} />
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span className="text-sm font-semibold">Download CV</span>
+                  <span className="text-xs text-slate-400">PDF · résumé</span>
+                </span>
               </a>
             </div>
           )}

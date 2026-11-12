@@ -1,6 +1,5 @@
-import { ArrowRight, MessageCircle, Hand, Download } from 'lucide-react';
+import { ArrowRight, MessageCircle, Hand } from 'lucide-react';
 import type { Profile } from '../lib/api';
-import { resolveAsset } from '../lib/admin-api';
 import { DEFAULT_NAME } from '../lib/profile';
 
 function CodeEditor() {
@@ -79,7 +78,6 @@ function CodeEditor() {
 export default function Hero({ profile }: { profile: Profile | null }) {
   const tagline = profile?.tagline ?? 'I build digital experiences that make an impact.';
   const parts = tagline.split(/(experiences)/i);
-  const cv = resolveAsset(profile?.cvUrl ?? null);
 
   return (
     <section id="home" className="relative overflow-hidden pt-28 sm:pt-36">
@@ -113,11 +111,6 @@ export default function Hero({ profile }: { profile: Profile | null }) {
             <a href="#contact" className="btn-ghost">
               Contact Me <MessageCircle size={18} />
             </a>
-            {cv && (
-              <a href={cv} target="_blank" rel="noopener noreferrer" download className="btn-ghost">
-                Download CV <Download size={18} />
-              </a>
-            )}
           </div>
         </div>
 

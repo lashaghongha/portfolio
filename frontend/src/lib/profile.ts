@@ -15,3 +15,13 @@ export function getInitials(name?: string | null): string {
 
   return (initials || DEFAULT_NAME.slice(0, 2)).toUpperCase();
 }
+
+/** Download filename for the CV, e.g. "Lasha Ghonghadze" -> "CV_lasha_ghonghadze.pdf". */
+export function cvDownloadName(name?: string | null): string {
+  const slug = (name ?? 'cv')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+  return `CV_${slug || 'cv'}.pdf`;
+}
