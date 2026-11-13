@@ -78,6 +78,23 @@ function ProjectCard({ project, peeking, peekSrc }: { project: Project; peeking:
   );
 }
 
+function ProjectCardSkeleton() {
+  return (
+    <div className="card-surface flex h-full animate-pulse flex-col p-5" aria-hidden>
+      <div className="mb-5 h-32 rounded-xl bg-white/[0.04]" />
+      <div className="h-5 w-2/3 rounded bg-white/[0.05]" />
+      <div className="mt-3 h-4 w-full rounded bg-white/[0.03]" />
+      <div className="mt-2 h-4 w-5/6 rounded bg-white/[0.03]" />
+      <div className="mt-5 flex gap-2">
+        <div className="h-6 w-16 rounded bg-white/[0.04]" />
+        <div className="h-6 w-12 rounded bg-white/[0.04]" />
+      </div>
+      <div className="mt-5 h-px bg-line" />
+      <div className="mt-4 h-4 w-24 rounded bg-white/[0.04]" />
+    </div>
+  );
+}
+
 export default function Projects({ projects }: { projects: Project[] }) {
   const { ref: revealRef, visible } = useReveal(0.05);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -116,20 +133,26 @@ export default function Projects({ projects }: { projects: Project[] }) {
         ref={setGridRef}
         className={`relative grid gap-5 sm:grid-cols-2 lg:grid-cols-3 ${visible ? '' : 'opacity-0'}`}
       >
-        {projects.map((project, i) => (
-          <div
-            key={project.id}
-            data-project-card
-            className={visible ? 'animate-fade-up' : ''}
-            style={{ animationDelay: `${i * 80}ms` }}
-          >
-            <ProjectCard
-              project={project}
-              peeking={peekId === project.id}
-              peekSrc={resolveAsset(project.gallery?.[0]?.url ?? null)}
-            />
-          </div>
-        ))}
+        {projects.length === 0
+          ? Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} data-project-card>
+                <ProjectCardSkeleton />
+              </div>
+            ))
+          : projects.map((project, i) => (
+              <div
+                key={project.id}
+                data-project-card
+                className={visible ? 'animate-fade-up' : ''}
+                style={{ animationDelay: `${i * 80}ms` }}
+              >
+                <ProjectCard
+                  project={project}
+                  peeking={peekId === project.id}
+                  peekSrc={resolveAsset(project.gallery?.[0]?.url ?? null)}
+                />
+              </div>
+            ))}
 
         <ProjectStickman gridRef={gridRef} projects={projects} onPeek={setPeekId} />
       </div>

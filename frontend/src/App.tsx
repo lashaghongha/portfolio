@@ -42,6 +42,16 @@ export default function App() {
     };
   }, []);
 
+  // Keep the document title / description in sync with the live profile.
+  useEffect(() => {
+    if (!profile) return;
+    const name = profile.name?.trim() || 'Lasha Ghonghadze';
+    const role = profile.role?.trim() || 'Full Stack Developer';
+    document.title = `${name} — ${role}`;
+    const desc = profile.bio?.trim() || `${role} building modern web applications.`;
+    document.querySelector('meta[name="description"]')?.setAttribute('content', desc);
+  }, [profile]);
+
   return (
     <div className="relative min-h-screen">
       <CursorGlow />
