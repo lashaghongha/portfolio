@@ -209,6 +209,31 @@
 .sm-worried .sm-eye {
   transform: scale(1.8);
 }
+/* Fleeing the cursor: run fast with arms thrown up. */
+.sm-flee {
+  animation: sm-bob 0.26s linear infinite;
+}
+.sm-flee .sm-leg-1 {
+  animation: sm-leg-1 0.26s linear infinite;
+}
+.sm-flee .sm-leg-2 {
+  animation: sm-leg-2 0.26s linear infinite;
+}
+.sm-flee .sm-arm-1 {
+  animation: sm-flee-arm-1 0.22s ease-in-out infinite;
+}
+.sm-flee .sm-arm-2 {
+  animation: sm-flee-arm-2 0.22s ease-in-out infinite;
+}
+@keyframes sm-flee-arm-1 {
+  0%, 100% { transform: rotate(-158deg); }
+  50% { transform: rotate(-125deg); }
+}
+@keyframes sm-flee-arm-2 {
+  0%, 100% { transform: rotate(158deg); }
+  50% { transform: rotate(125deg); }
+}
+
 .sm-boing {
   animation: sm-boing 0.6s cubic-bezier(0.3, 1.5, 0.5, 1);
 }

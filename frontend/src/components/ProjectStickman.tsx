@@ -79,8 +79,8 @@ export default function ProjectStickman({
   // Get nervous and dodge away when the cursor comes near.
   useEffect(() => {
     if (!enabled) return;
-    const RADIUS = 115;
-    const MAX_DODGE = 44;
+    const RADIUS = 120;
+    const MAX_DODGE = 62;
     let raf = 0;
     let last: { cx: number; cy: number } | null = null;
 

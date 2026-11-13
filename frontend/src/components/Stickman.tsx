@@ -23,7 +23,7 @@ export default function Stickman({
       width={(size * 24) / 40}
       height={size}
       viewBox="0 0 24 40"
-      className={`${moving ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''} ${climbing ? 'sm-climb' : ''} ${startled ? 'sm-startled' : ''} ${worried ? 'sm-worried' : ''}`}
+      className={`${moving && !worried ? 'sm-moving' : ''} ${looking ? 'sm-look' : ''} ${panic ? 'sm-panic' : ''} ${climbing ? 'sm-climb' : ''} ${startled ? 'sm-startled' : ''} ${worried ? 'sm-worried sm-flee' : ''}`}
       style={{ overflow: 'visible' }}
       fill="none"
       stroke="white"
