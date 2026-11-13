@@ -15,6 +15,7 @@ import {
   getProjects,
   getSkills,
   getExperience,
+  trackView,
   type Profile,
   type Stat,
   type Project,
@@ -45,6 +46,10 @@ export default function App() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    trackView('home');
   }, []);
 
   // Keep the document title / description in sync with the live profile.

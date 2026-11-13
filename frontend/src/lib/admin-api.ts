@@ -1,4 +1,4 @@
-import { API_BASE, type Profile, type Project, type Skill, type Stat, type ExperienceItem } from './api';
+import { API_BASE, type Profile, type Project, type Skill, type Stat, type ExperienceItem, type ViewCounter } from './api';
 
 const TOKEN_KEY = 'portfolio_admin_token';
 
@@ -84,6 +84,9 @@ export const adminGetExperience = () => authed<ExperienceItem[]>('/api/admin/exp
 export const createExperience = (e: Omit<ExperienceItem, 'id'>) => authed<ExperienceItem>('/api/admin/experience', 'POST', e);
 export const updateExperience = (id: number, e: ExperienceItem) => authed<ExperienceItem>(`/api/admin/experience/${id}`, 'PUT', e);
 export const deleteExperience = (id: number) => authed<void>(`/api/admin/experience/${id}`, 'DELETE');
+
+// ---- Analytics ----
+export const adminGetAnalytics = () => authed<ViewCounter[]>('/api/admin/analytics', 'GET');
 
 // ---- Image upload ----
 export async function uploadImage(file: File): Promise<string> {

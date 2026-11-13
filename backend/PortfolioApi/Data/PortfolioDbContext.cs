@@ -15,6 +15,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<Stat> Stats => Set<Stat>();
     public DbSet<ExperienceItem> Experiences => Set<ExperienceItem>();
+    public DbSet<ViewCounter> ViewCounters => Set<ViewCounter>();
     public DbSet<StoredImage> Images => Set<StoredImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -63,6 +64,10 @@ public class PortfolioDbContext : DbContext
         modelBuilder.Entity<Project>()
             .Property(p => p.Specs)
             .HasConversion(specsConverter, specsComparer);
+
+        modelBuilder.Entity<ViewCounter>()
+            .HasIndex(v => v.Key)
+            .IsUnique();
     }
 
     private static List<SpecRow> DeserializeSpecs(string json)

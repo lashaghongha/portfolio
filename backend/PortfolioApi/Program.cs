@@ -225,6 +225,26 @@ api.MapPost("/contact", async (ContactMessage message, EmailSender email) =>
     return Results.Ok(new { success = true, message = "Thanks! Your message has been received." });
 });
 
+// ---- Privacy-friendly view tracking (no PII) ----
+api.MapPost("/track", async (TrackRequest req, PortfolioDbContext db) =>
+{
+    var key = (req.Key ?? string.Empty).Trim();
+    // Only allow known keys so the table can't be flooded with arbitrary values.
+    if (key != "home" && !System.Text.RegularExpressions.Regex.IsMatch(key, @"^project:\d{1,9}$"))
+        return Results.BadRequest();
+
+    var counter = await db.ViewCounters.FirstOrDefaultAsync(v => v.Key == key);
+    if (counter is null)
+        db.ViewCounters.Add(new ViewCounter { Key = key, Count = 1, UpdatedAt = DateTime.UtcNow });
+    else
+    {
+        counter.Count += 1;
+        counter.UpdatedAt = DateTime.UtcNow;
+    }
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
 // ---- Admin (JWT protected) ----
 app.MapAdminEndpoints();
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-react';
 import { GithubIcon } from '../lib/brand-icons';
-import { getProject, safeUrl, type Project } from '../lib/api';
+import { getProject, trackView, safeUrl, type Project } from '../lib/api';
 import { resolveIcon, accent } from '../lib/icons';
 import { resolveAsset } from '../lib/admin-api';
 import { groupGallery } from '../lib/gallery';
@@ -31,6 +31,7 @@ export default function ProjectDetail() {
     }
 
     window.scrollTo(0, 0);
+    trackView(`project:${numericId}`);
     let active = true;
     setState('loading');
     getProject(numericId)

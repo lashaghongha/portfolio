@@ -114,4 +114,16 @@ public class ContactMessage
     public string Message { get; set; } = string.Empty;
 }
 
+// Privacy-friendly view counter (no PII) — one row per tracked key
+// ("home" or "project:{id}").
+public class ViewCounter
+{
+    public int Id { get; set; }
+    public string Key { get; set; } = string.Empty;
+    public long Count { get; set; }
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+}
+
+public record TrackRequest(string Key);
+
 public record LoginRequest(string Password);

@@ -1,13 +1,14 @@
 import { useState } from 'react';
-import { LogOut, User, FolderGit2, Wrench, BarChart3, Briefcase, ExternalLink } from 'lucide-react';
+import { LogOut, User, FolderGit2, Wrench, BarChart3, Briefcase, LineChart, ExternalLink } from 'lucide-react';
 import { logout } from '../lib/admin-api';
 import ProfileEditor from './ProfileEditor';
 import ProjectsEditor from './ProjectsEditor';
 import SkillsEditor from './SkillsEditor';
 import StatsEditor from './StatsEditor';
 import ExperienceEditor from './ExperienceEditor';
+import AnalyticsView from './AnalyticsView';
 
-type Tab = 'profile' | 'projects' | 'skills' | 'stats' | 'experience';
+type Tab = 'profile' | 'projects' | 'skills' | 'stats' | 'experience' | 'analytics';
 
 const tabs: { id: Tab; label: string; icon: typeof User }[] = [
   { id: 'profile', label: 'Profile', icon: User },
@@ -15,6 +16,7 @@ const tabs: { id: Tab; label: string; icon: typeof User }[] = [
   { id: 'experience', label: 'Experience', icon: Briefcase },
   { id: 'skills', label: 'Skills', icon: Wrench },
   { id: 'stats', label: 'Stats', icon: BarChart3 },
+  { id: 'analytics', label: 'Analytics', icon: LineChart },
 ];
 
 export default function Dashboard({ onLogout }: { onLogout: () => void }) {
@@ -62,6 +64,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
         {tab === 'experience' && <ExperienceEditor />}
         {tab === 'skills' && <SkillsEditor />}
         {tab === 'stats' && <StatsEditor />}
+        {tab === 'analytics' && <AnalyticsView />}
       </div>
     </div>
   );

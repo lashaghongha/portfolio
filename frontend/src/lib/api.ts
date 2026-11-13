@@ -86,6 +86,30 @@ export const getProject = (id: number) => getJson<Project>(`/api/projects/${id}`
 export const getSkills = () => getJson<Skill[]>('/api/skills');
 export const getExperience = () => getJson<ExperienceItem[]>('/api/experience');
 
+export interface ViewCounter {
+  id: number;
+  key: string;
+  count: number;
+  updatedAt: string;
+}
+
+// Fire-and-forget view tracking; counted at most once per browser session per key.
+export function trackView(key: string): void {
+  try {
+    const flag = `tracked:${key}`;
+    if (sessionStorage.getItem(flag)) return;
+    sessionStorage.setItem(flag, '1');
+  } catch {
+    // sessionStorage unavailable (private mode) — still track, just not deduped.
+  }
+  fetch(`${API_BASE}/api/track`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key }),
+    keepalive: true,
+  }).catch(() => {});
+}
+
 // Only allow safe schemes for user-editable links (guards against javascript:/data: URLs).
 export function safeUrl(url: string | null | undefined): string | undefined {
   if (!url) return undefined;

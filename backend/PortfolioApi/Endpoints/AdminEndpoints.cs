@@ -193,6 +193,10 @@ public static class AdminEndpoints
             return Results.NoContent();
         });
 
+        // ---- Analytics (view counters) ----
+        admin.MapGet("/analytics", async (PortfolioDbContext db) =>
+            Results.Ok(await db.ViewCounters.OrderByDescending(v => v.Count).ToListAsync()));
+
         // ---- Image upload (stored in DB so it survives redeploys) ----
         admin.MapPost("/upload", async (IFormFile? file, PortfolioDbContext db) =>
         {
