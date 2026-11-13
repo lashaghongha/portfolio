@@ -158,6 +158,41 @@ public static class AdminEndpoints
             return Results.NoContent();
         });
 
+        // ---- Experience / Education ----
+        admin.MapGet("/experience", async (PortfolioDbContext db) =>
+            Results.Ok(await db.Experiences.OrderBy(e => e.SortOrder).ThenBy(e => e.Id).ToListAsync()));
+
+        admin.MapPost("/experience", async (ExperienceItem input, PortfolioDbContext db) =>
+        {
+            input.Id = 0;
+            db.Experiences.Add(input);
+            await db.SaveChangesAsync();
+            return Results.Created($"/api/admin/experience/{input.Id}", input);
+        });
+
+        admin.MapPut("/experience/{id:int}", async (int id, ExperienceItem input, PortfolioDbContext db) =>
+        {
+            var item = await db.Experiences.FindAsync(id);
+            if (item is null) return Results.NotFound();
+            item.Kind = input.Kind;
+            item.Title = input.Title;
+            item.Organization = input.Organization;
+            item.Period = input.Period;
+            item.Description = input.Description;
+            item.SortOrder = input.SortOrder;
+            await db.SaveChangesAsync();
+            return Results.Ok(item);
+        });
+
+        admin.MapDelete("/experience/{id:int}", async (int id, PortfolioDbContext db) =>
+        {
+            var item = await db.Experiences.FindAsync(id);
+            if (item is null) return Results.NotFound();
+            db.Experiences.Remove(item);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
         // ---- Image upload (stored in DB so it survives redeploys) ----
         admin.MapPost("/upload", async (IFormFile? file, PortfolioDbContext db) =>
         {

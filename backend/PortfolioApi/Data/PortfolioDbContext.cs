@@ -14,6 +14,7 @@ public class PortfolioDbContext : DbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<Skill> Skills => Set<Skill>();
     public DbSet<Stat> Stats => Set<Stat>();
+    public DbSet<ExperienceItem> Experiences => Set<ExperienceItem>();
     public DbSet<StoredImage> Images => Set<StoredImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

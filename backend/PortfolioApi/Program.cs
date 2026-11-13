@@ -197,6 +197,9 @@ api.MapGet("/images/{id:int}", async (int id, PortfolioDbContext db, HttpContext
 api.MapGet("/skills", async (PortfolioDbContext db) =>
     Results.Ok(await db.Skills.OrderBy(s => s.SortOrder).ThenBy(s => s.Id).ToListAsync()));
 
+api.MapGet("/experience", async (PortfolioDbContext db) =>
+    Results.Ok(await db.Experiences.OrderBy(e => e.SortOrder).ThenBy(e => e.Id).ToListAsync()));
+
 api.MapPost("/contact", async (ContactMessage message, EmailSender email) =>
 {
     var validationResults = new List<ValidationResult>();

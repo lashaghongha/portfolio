@@ -22,6 +22,42 @@ namespace PortfolioApi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("PortfolioApi.Models.ExperienceItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Organization")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Experiences");
+                });
+
             modelBuilder.Entity("PortfolioApi.Models.Profile", b =>
                 {
                     b.Property<int>("Id")

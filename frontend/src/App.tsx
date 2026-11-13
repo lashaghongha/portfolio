@@ -5,6 +5,7 @@ import Hero from './components/Hero';
 import About from './components/About';
 import Stats from './components/Stats';
 import Projects from './components/Projects';
+import Experience from './components/Experience';
 import Skills from './components/Skills';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
@@ -13,10 +14,12 @@ import {
   getStats,
   getProjects,
   getSkills,
+  getExperience,
   type Profile,
   type Stat,
   type Project,
   type Skill,
+  type ExperienceItem,
 } from './lib/api';
 
 export default function App() {
@@ -24,17 +27,19 @@ export default function App() {
   const [stats, setStats] = useState<Stat[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
+  const [experience, setExperience] = useState<ExperienceItem[]>([]);
   const [error, setError] = useState(false);
 
   useEffect(() => {
     let active = true;
-    Promise.all([getProfile(), getStats(), getProjects(), getSkills()])
-      .then(([p, s, pr, sk]) => {
+    Promise.all([getProfile(), getStats(), getProjects(), getSkills(), getExperience()])
+      .then(([p, s, pr, sk, ex]) => {
         if (!active) return;
         setProfile(p);
         setStats(s);
         setProjects(pr);
         setSkills(sk);
+        setExperience(ex);
       })
       .catch(() => active && setError(true));
     return () => {
@@ -62,6 +67,7 @@ export default function App() {
           <About profile={profile} />
           <Stats stats={stats} />
           <Projects projects={projects} />
+          <Experience items={experience} />
           <Skills skills={skills} />
           <Contact profile={profile} />
         </main>

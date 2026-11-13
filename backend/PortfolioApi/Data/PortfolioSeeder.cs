@@ -56,6 +56,13 @@ public static class PortfolioSeeder
                 new Skill { Name = "Docker", Icon = "docker", Category = "Tooling", SortOrder = 8 });
         }
 
+        if (!db.Experiences.Any())
+        {
+            db.Experiences.AddRange(
+                new ExperienceItem { Kind = "work", Title = "Full Stack Developer", Organization = "Freelance", Period = "2023 — Present", Description = "Building web applications end to end — React frontends, .NET APIs and databases.", SortOrder = 1 },
+                new ExperienceItem { Kind = "education", Title = "Computer Science", Organization = "University", Period = "2020 — 2024", Description = "Studied software engineering, algorithms and web development.", SortOrder = 1 });
+        }
+
         db.SaveChanges();
     }
 }

@@ -57,6 +57,16 @@ export interface Stat {
   sortOrder: number;
 }
 
+export interface ExperienceItem {
+  id: number;
+  kind: string; // "work" | "education"
+  title: string;
+  organization: string;
+  period: string;
+  description: string;
+  sortOrder: number;
+}
+
 export interface ContactPayload {
   name: string;
   email: string;
@@ -74,6 +84,7 @@ export const getStats = () => getJson<Stat[]>('/api/stats');
 export const getProjects = () => getJson<Project[]>('/api/projects');
 export const getProject = (id: number) => getJson<Project>(`/api/projects/${id}`);
 export const getSkills = () => getJson<Skill[]>('/api/skills');
+export const getExperience = () => getJson<ExperienceItem[]>('/api/experience');
 
 // Only allow safe schemes for user-editable links (guards against javascript:/data: URLs).
 export function safeUrl(url: string | null | undefined): string | undefined {

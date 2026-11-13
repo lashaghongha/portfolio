@@ -64,6 +64,18 @@ public class Stat
     public int SortOrder { get; set; }
 }
 
+// One row of the Experience / Education timeline. Kind is "work" or "education".
+public class ExperienceItem
+{
+    public int Id { get; set; }
+    public string Kind { get; set; } = "work";
+    public string Title { get; set; } = string.Empty;        // role or degree
+    public string Organization { get; set; } = string.Empty; // company or school
+    public string Period { get; set; } = string.Empty;       // e.g. "2023 — Present"
+    public string Description { get; set; } = string.Empty;
+    public int SortOrder { get; set; }
+}
+
 public class Profile
 {
     public int Id { get; set; }

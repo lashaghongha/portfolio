@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { LogOut, User, FolderGit2, Wrench, BarChart3, ExternalLink } from 'lucide-react';
+import { LogOut, User, FolderGit2, Wrench, BarChart3, Briefcase, ExternalLink } from 'lucide-react';
 import { logout } from '../lib/admin-api';
 import ProfileEditor from './ProfileEditor';
 import ProjectsEditor from './ProjectsEditor';
 import SkillsEditor from './SkillsEditor';
 import StatsEditor from './StatsEditor';
+import ExperienceEditor from './ExperienceEditor';
 
-type Tab = 'profile' | 'projects' | 'skills' | 'stats';
+type Tab = 'profile' | 'projects' | 'skills' | 'stats' | 'experience';
 
 const tabs: { id: Tab; label: string; icon: typeof User }[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'projects', label: 'Projects', icon: FolderGit2 },
+  { id: 'experience', label: 'Experience', icon: Briefcase },
   { id: 'skills', label: 'Skills', icon: Wrench },
   { id: 'stats', label: 'Stats', icon: BarChart3 },
 ];
@@ -57,6 +59,7 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
 
         {tab === 'profile' && <ProfileEditor />}
         {tab === 'projects' && <ProjectsEditor />}
+        {tab === 'experience' && <ExperienceEditor />}
         {tab === 'skills' && <SkillsEditor />}
         {tab === 'stats' && <StatsEditor />}
       </div>
