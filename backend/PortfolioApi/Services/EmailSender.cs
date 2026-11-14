@@ -40,6 +40,8 @@ public sealed class EmailSender
         !string.IsNullOrWhiteSpace(_from) &&
         !string.IsNullOrWhiteSpace(_to);
 
+    public string FromAddress => _from;
+
     // Sends the contact message. Returns true when actually delivered, false when
     // email is not configured (caller treats that as a soft success + log).
     public async Task<bool> SendContactAsync(string name, string fromEmail, string message, CancellationToken ct = default)
@@ -65,11 +67,15 @@ public sealed class EmailSender
         {
             EnableSsl = true,
             DeliveryMethod = SmtpDeliveryMethod.Network,
+            Timeout = 15000,
         };
         if (!string.IsNullOrWhiteSpace(_user))
             client.Credentials = new NetworkCredential(_user, _pass);
 
-        await client.SendMailAsync(mail, ct);
+        // Cap the send so a stuck SMTP connection can't hang forever.
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        cts.CancelAfter(TimeSpan.FromSeconds(15));
+        await client.SendMailAsync(mail, cts.Token);
         _logger.LogInformation("Contact email delivered to {To} for {Name} <{Email}>", _to, name, fromEmail);
         return true;
     }

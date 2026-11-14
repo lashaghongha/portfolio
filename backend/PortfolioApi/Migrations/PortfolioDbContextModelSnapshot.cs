@@ -37,6 +37,9 @@ namespace PortfolioApi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("EmailError")
+                        .HasColumnType("text");
+
                     b.Property<bool>("Emailed")
                         .HasColumnType("boolean");
 

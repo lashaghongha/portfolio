@@ -200,7 +200,7 @@ api.MapGet("/skills", async (PortfolioDbContext db) =>
 api.MapGet("/experience", async (PortfolioDbContext db) =>
     Results.Ok(await db.Experiences.OrderBy(e => e.SortOrder).ThenBy(e => e.Id).ToListAsync()));
 
-api.MapPost("/contact", async (ContactMessage message, EmailSender email, PortfolioDbContext db) =>
+api.MapPost("/contact", async (ContactMessage message, PortfolioDbContext db, EmailSender email, IServiceScopeFactory scopeFactory) =>
 {
     var validationResults = new List<ValidationResult>();
     var context = new ValidationContext(message);
@@ -222,21 +222,41 @@ api.MapPost("/contact", async (ContactMessage message, EmailSender email, Portfo
     };
     db.ContactSubmissions.Add(submission);
     await db.SaveChangesAsync();
+    var submissionId = submission.Id;
 
-    // Best-effort email notification; a failure here must not lose the message.
-    try
+    // Send the email in the background so the visitor never waits on SMTP. The
+    // outcome (delivered / error reason) is written back for the admin inbox.
+    _ = Task.Run(async () =>
     {
-        var delivered = await email.SendContactAsync(message.Name, message.Email, message.Message);
-        if (delivered)
+        string? error = null;
+        var delivered = false;
+        try
         {
-            submission.Emailed = true;
-            await db.SaveChangesAsync();
+            delivered = await email.SendContactAsync(message.Name, message.Email, message.Message);
         }
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "Contact email failed from {Name} <{Email}> (saved to inbox)", message.Name, message.Email);
-    }
+        catch (Exception ex)
+        {
+            error = ex.InnerException?.Message ?? ex.Message;
+            app.Logger.LogError(ex, "Contact email failed (saved to inbox)");
+        }
+
+        try
+        {
+            using var scope = scopeFactory.CreateScope();
+            var bgDb = scope.ServiceProvider.GetRequiredService<PortfolioDbContext>();
+            var s = await bgDb.ContactSubmissions.FindAsync(submissionId);
+            if (s is not null)
+            {
+                s.Emailed = delivered;
+                s.EmailError = error;
+                await bgDb.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            app.Logger.LogError(ex, "Failed to record contact email status");
+        }
+    });
 
     return Results.Ok(new { success = true, message = "Thanks! Your message has been received." });
 });

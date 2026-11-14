@@ -1,10 +1,48 @@
 import { useEffect, useState } from 'react';
-import { Mail, Trash2, Check, CornerUpLeft } from 'lucide-react';
+import { Mail, Trash2, Check, CornerUpLeft, Send, Loader2 } from 'lucide-react';
 import type { ContactSubmission } from '../lib/api';
-import { adminGetMessages, markMessageRead, deleteMessage } from '../lib/admin-api';
+import { adminGetMessages, markMessageRead, deleteMessage, emailTest } from '../lib/admin-api';
 
 function when(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function EmailTester() {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string>('');
+  const [ok, setOk] = useState<boolean | null>(null);
+
+  async function run() {
+    setBusy(true);
+    setResult('');
+    setOk(null);
+    try {
+      const r = await emailTest();
+      setOk(r.ok);
+      if (r.ok) setResult('Test email sent — check your inbox.');
+      else if (!r.configured) setResult(r.error ?? 'SMTP not configured.');
+      else setResult(`Failed: ${r.error ?? 'unknown error'}`);
+    } catch (err) {
+      setOk(false);
+      setResult(err instanceof Error ? err.message : 'Request failed.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="card-surface flex flex-wrap items-center gap-3 p-4">
+      <button onClick={run} disabled={busy} className="btn-ghost !py-2 text-sm disabled:opacity-60">
+        {busy ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />} Send test email
+      </button>
+      {result && (
+        <span className={`text-sm ${ok ? 'text-emerald-400' : 'text-amber-400'}`}>{result}</span>
+      )}
+      <span className="w-full text-xs text-slate-600">
+        Checks your SMTP setup and shows the exact error if it fails.
+      </span>
+    </div>
+  );
 }
 
 export default function MessagesView() {
@@ -36,16 +74,20 @@ export default function MessagesView() {
 
   const unread = messages.filter((m) => !m.isRead).length;
 
-  if (messages.length === 0) {
-    return <p className="text-sm text-slate-500">No messages yet. Submissions from the contact form will appear here.</p>;
-  }
-
   return (
     <div className="max-w-2xl space-y-3">
-      <p className="text-sm text-slate-400">
-        {messages.length} message{messages.length === 1 ? '' : 's'}
-        {unread > 0 && <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent-soft">{unread} new</span>}
-      </p>
+      <EmailTester />
+
+      {messages.length === 0 && (
+        <p className="text-sm text-slate-500">No messages yet. Submissions from the contact form will appear here.</p>
+      )}
+
+      {messages.length > 0 && (
+        <p className="text-sm text-slate-400">
+          {messages.length} message{messages.length === 1 ? '' : 's'}
+          {unread > 0 && <span className="ml-2 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-accent-soft">{unread} new</span>}
+        </p>
+      )}
 
       {messages.map((m) => (
         <div key={m.id} className={`card-surface p-4 ${m.isRead ? '' : 'border-accent/40'}`}>
@@ -65,8 +107,8 @@ export default function MessagesView() {
               </button>
             )}
             {!m.emailed && (
-              <span className="inline-flex items-center gap-1 text-xs text-amber-400/80">
-                <Mail size={12} /> not emailed
+              <span className="inline-flex items-center gap-1 text-xs text-amber-400/80" title={m.emailError ?? 'Email not sent (SMTP not configured or still sending).'}>
+                <Mail size={12} /> not emailed{m.emailError ? ' ⚠' : ''}
               </span>
             )}
             <button

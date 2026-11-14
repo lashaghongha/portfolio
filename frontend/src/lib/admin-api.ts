@@ -7,6 +7,7 @@ import {
   type ExperienceItem,
   type AnalyticsResult,
   type ContactSubmission,
+  type EmailTestResult,
 } from './api';
 
 const TOKEN_KEY = 'portfolio_admin_token';
@@ -101,6 +102,7 @@ export const adminGetAnalytics = () => authed<AnalyticsResult>('/api/admin/analy
 export const adminGetMessages = () => authed<ContactSubmission[]>('/api/admin/messages', 'GET');
 export const markMessageRead = (id: number) => authed<ContactSubmission>(`/api/admin/messages/${id}/read`, 'PUT');
 export const deleteMessage = (id: number) => authed<void>(`/api/admin/messages/${id}`, 'DELETE');
+export const emailTest = () => authed<EmailTestResult>('/api/admin/email-test', 'POST');
 
 // ---- Image upload ----
 export async function uploadImage(file: File): Promise<string> {

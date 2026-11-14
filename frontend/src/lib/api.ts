@@ -117,6 +117,13 @@ export interface ContactSubmission {
   createdAt: string;
   isRead: boolean;
   emailed: boolean;
+  emailError?: string | null;
+}
+
+export interface EmailTestResult {
+  configured: boolean;
+  ok: boolean;
+  error: string | null;
 }
 
 // Fire-and-forget view tracking; counted at most once per browser session per key.

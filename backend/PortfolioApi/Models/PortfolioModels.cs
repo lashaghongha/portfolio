@@ -125,6 +125,7 @@ public class ContactSubmission
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public bool IsRead { get; set; }
     public bool Emailed { get; set; }
+    public string? EmailError { get; set; }
 }
 
 // Privacy-friendly view counter (no PII) — one row per tracked key

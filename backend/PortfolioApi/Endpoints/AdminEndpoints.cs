@@ -206,6 +206,22 @@ public static class AdminEndpoints
             return Results.Ok(new { counters, recent, cvDownloads, cvViews });
         });
 
+        // ---- Email test (diagnose SMTP setup) ----
+        admin.MapPost("/email-test", async (PortfolioApi.Services.EmailSender email) =>
+        {
+            if (!email.IsConfigured)
+                return Results.Ok(new { configured = false, ok = false, error = "SMTP is not configured (set SMTP_HOST, SMTP_USER, SMTP_PASS, SMTP_FROM, CONTACT_TO)." });
+            try
+            {
+                await email.SendContactAsync("Portfolio test", email.FromAddress, "This is a test email from your portfolio admin. If you received it, email is working.");
+                return Results.Ok(new { configured = true, ok = true, error = (string?)null });
+            }
+            catch (Exception ex)
+            {
+                return Results.Ok(new { configured = true, ok = false, error = ex.InnerException?.Message ?? ex.Message });
+            }
+        });
+
         // ---- Contact messages (inbox) ----
         admin.MapGet("/messages", async (PortfolioDbContext db) =>
             Results.Ok(await db.ContactSubmissions.OrderByDescending(m => m.CreatedAt).ToListAsync()));
