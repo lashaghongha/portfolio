@@ -1,7 +1,8 @@
-import { MapPin, Briefcase, BadgeCheck, Download, User } from 'lucide-react';
+import { MapPin, Briefcase, BadgeCheck, Download, Eye, User } from 'lucide-react';
 import type { Profile } from '../lib/api';
 import { resolveAsset } from '../lib/admin-api';
 import { getInitials, cvDownloadName } from '../lib/profile';
+import { trackCv } from '../lib/analytics';
 import { useReveal } from '../hooks/useReveal';
 
 const DEFAULT_ABOUT =
@@ -89,12 +90,13 @@ export default function About({ profile }: { profile: Profile | null }) {
           </div>
 
           {cv && (
-            <div className="mt-8">
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <a
                 href={cv}
                 target="_blank"
                 rel="noopener noreferrer"
                 download={cvDownloadName(profile?.name)}
+                onClick={() => trackCv('download')}
                 className="group inline-flex items-center gap-3 rounded-2xl border border-accent/30 bg-accent/10 py-2.5 pl-2.5 pr-5 text-white transition-colors hover:border-accent/60 hover:bg-accent/15"
               >
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent-glow to-accent text-white shadow-glow transition-transform group-hover:-translate-y-0.5">
@@ -104,6 +106,15 @@ export default function About({ profile }: { profile: Profile | null }) {
                   <span className="text-sm font-semibold">Download CV</span>
                   <span className="text-xs text-slate-400">PDF · résumé</span>
                 </span>
+              </a>
+              <a
+                href={cv}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => trackCv('view')}
+                className="inline-flex items-center gap-2 self-stretch rounded-2xl border border-line bg-white/[0.02] px-5 text-sm font-medium text-slate-300 transition-colors hover:border-accent/50 hover:text-white"
+              >
+                <Eye size={16} /> View in browser
               </a>
             </div>
           )}

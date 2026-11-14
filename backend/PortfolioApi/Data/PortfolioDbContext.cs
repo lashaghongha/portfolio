@@ -16,6 +16,8 @@ public class PortfolioDbContext : DbContext
     public DbSet<Stat> Stats => Set<Stat>();
     public DbSet<ExperienceItem> Experiences => Set<ExperienceItem>();
     public DbSet<ViewCounter> ViewCounters => Set<ViewCounter>();
+    public DbSet<ViewEvent> ViewEvents => Set<ViewEvent>();
+    public DbSet<ContactSubmission> ContactSubmissions => Set<ContactSubmission>();
     public DbSet<StoredImage> Images => Set<StoredImage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -22,6 +22,7 @@ import {
   type Skill,
   type ExperienceItem,
 } from './lib/api';
+import { useViewTracking } from './lib/analytics';
 
 export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -51,6 +52,7 @@ export default function App() {
   useEffect(() => {
     trackView('home');
   }, []);
+  useViewTracking('home');
 
   // Keep the document title / description in sync with the live profile.
   useEffect(() => {

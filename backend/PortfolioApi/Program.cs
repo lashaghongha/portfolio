@@ -200,7 +200,7 @@ api.MapGet("/skills", async (PortfolioDbContext db) =>
 api.MapGet("/experience", async (PortfolioDbContext db) =>
     Results.Ok(await db.Experiences.OrderBy(e => e.SortOrder).ThenBy(e => e.Id).ToListAsync()));
 
-api.MapPost("/contact", async (ContactMessage message, EmailSender email) =>
+api.MapPost("/contact", async (ContactMessage message, EmailSender email, PortfolioDbContext db) =>
 {
     var validationResults = new List<ValidationResult>();
     var context = new ValidationContext(message);
@@ -212,17 +212,66 @@ api.MapPost("/contact", async (ContactMessage message, EmailSender email) =>
         return Results.ValidationProblem(errors);
     }
 
+    // Always persist the message so it is never lost, even if email is unconfigured.
+    var submission = new ContactSubmission
+    {
+        Name = message.Name,
+        Email = message.Email,
+        Message = message.Message,
+        CreatedAt = DateTime.UtcNow,
+    };
+    db.ContactSubmissions.Add(submission);
+    await db.SaveChangesAsync();
+
+    // Best-effort email notification; a failure here must not lose the message.
     try
     {
-        await email.SendContactAsync(message.Name, message.Email, message.Message);
+        var delivered = await email.SendContactAsync(message.Name, message.Email, message.Message);
+        if (delivered)
+        {
+            submission.Emailed = true;
+            await db.SaveChangesAsync();
+        }
     }
     catch (Exception ex)
     {
-        app.Logger.LogError(ex, "Failed to send contact email from {Name} <{Email}>", message.Name, message.Email);
-        return Results.Problem("Could not send your message right now. Please email directly.", statusCode: 502);
+        app.Logger.LogError(ex, "Contact email failed from {Name} <{Email}> (saved to inbox)", message.Name, message.Email);
     }
 
     return Results.Ok(new { success = true, message = "Thanks! Your message has been received." });
+});
+
+// ---- View events: start / end / cv (detailed analytics) ----
+const int MaxDurationMs = 2 * 60 * 60 * 1000; // clamp to 2h
+
+api.MapPost("/track/start", async (TrackStartRequest req, PortfolioDbContext db) =>
+{
+    var key = (req.Key ?? string.Empty).Trim();
+    if (key != "home" && !System.Text.RegularExpressions.Regex.IsMatch(key, @"^project:\d{1,9}$"))
+        return Results.BadRequest();
+    var ev = new ViewEvent { Key = key, StartedAt = DateTime.UtcNow };
+    db.ViewEvents.Add(ev);
+    await db.SaveChangesAsync();
+    return Results.Ok(new { id = ev.Id });
+});
+
+api.MapPost("/track/end", async (TrackEndRequest req, PortfolioDbContext db) =>
+{
+    var ev = await db.ViewEvents.FindAsync(req.Id);
+    if (ev is null) return Results.NoContent();
+    ev.DurationMs = Math.Clamp(req.DurationMs, 0, MaxDurationMs);
+    await db.SaveChangesAsync();
+    return Results.NoContent();
+});
+
+api.MapPost("/track/cv", async (TrackCvRequest req, PortfolioDbContext db) =>
+{
+    var ev = await db.ViewEvents.FindAsync(req.Id);
+    if (ev is null) return Results.NoContent();
+    if (req.Action == "download") ev.CvDownloaded = true;
+    else ev.CvViewed = true;
+    await db.SaveChangesAsync();
+    return Results.NoContent();
 });
 
 // ---- Privacy-friendly view tracking (no PII) ----

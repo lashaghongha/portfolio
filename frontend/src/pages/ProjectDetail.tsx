@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowUpRight, Loader2 } from 'lucide-react';
 import { GithubIcon } from '../lib/brand-icons';
 import { getProject, trackView, safeUrl, type Project } from '../lib/api';
+import { useViewTracking } from '../lib/analytics';
 import { resolveIcon, accent } from '../lib/icons';
 import { resolveAsset } from '../lib/admin-api';
 import { groupGallery } from '../lib/gallery';
@@ -22,6 +23,8 @@ export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [state, setState] = useState<LoadState>('loading');
+
+  useViewTracking(`project:${id}`);
 
   useEffect(() => {
     const numericId = Number(id);

@@ -93,6 +93,32 @@ export interface ViewCounter {
   updatedAt: string;
 }
 
+export interface ViewEvent {
+  id: number;
+  key: string;
+  startedAt: string;
+  durationMs: number;
+  cvViewed: boolean;
+  cvDownloaded: boolean;
+}
+
+export interface AnalyticsResult {
+  counters: ViewCounter[];
+  recent: ViewEvent[];
+  cvDownloads: number;
+  cvViews: number;
+}
+
+export interface ContactSubmission {
+  id: number;
+  name: string;
+  email: string;
+  message: string;
+  createdAt: string;
+  isRead: boolean;
+  emailed: boolean;
+}
+
 // Fire-and-forget view tracking; counted at most once per browser session per key.
 export function trackView(key: string): void {
   try {

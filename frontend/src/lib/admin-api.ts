@@ -1,4 +1,13 @@
-import { API_BASE, type Profile, type Project, type Skill, type Stat, type ExperienceItem, type ViewCounter } from './api';
+import {
+  API_BASE,
+  type Profile,
+  type Project,
+  type Skill,
+  type Stat,
+  type ExperienceItem,
+  type AnalyticsResult,
+  type ContactSubmission,
+} from './api';
 
 const TOKEN_KEY = 'portfolio_admin_token';
 
@@ -86,7 +95,12 @@ export const updateExperience = (id: number, e: ExperienceItem) => authed<Experi
 export const deleteExperience = (id: number) => authed<void>(`/api/admin/experience/${id}`, 'DELETE');
 
 // ---- Analytics ----
-export const adminGetAnalytics = () => authed<ViewCounter[]>('/api/admin/analytics', 'GET');
+export const adminGetAnalytics = () => authed<AnalyticsResult>('/api/admin/analytics', 'GET');
+
+// ---- Contact messages ----
+export const adminGetMessages = () => authed<ContactSubmission[]>('/api/admin/messages', 'GET');
+export const markMessageRead = (id: number) => authed<ContactSubmission>(`/api/admin/messages/${id}/read`, 'PUT');
+export const deleteMessage = (id: number) => authed<void>(`/api/admin/messages/${id}`, 'DELETE');
 
 // ---- Image upload ----
 export async function uploadImage(file: File): Promise<string> {

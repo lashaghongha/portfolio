@@ -193,9 +193,40 @@ public static class AdminEndpoints
             return Results.NoContent();
         });
 
-        // ---- Analytics (view counters) ----
+        // ---- Analytics (totals + recent sessions) ----
         admin.MapGet("/analytics", async (PortfolioDbContext db) =>
-            Results.Ok(await db.ViewCounters.OrderByDescending(v => v.Count).ToListAsync()));
+        {
+            var counters = await db.ViewCounters.OrderByDescending(v => v.Count).ToListAsync();
+            var recent = await db.ViewEvents
+                .OrderByDescending(e => e.StartedAt)
+                .Take(100)
+                .ToListAsync();
+            var cvDownloads = await db.ViewEvents.CountAsync(e => e.CvDownloaded);
+            var cvViews = await db.ViewEvents.CountAsync(e => e.CvViewed);
+            return Results.Ok(new { counters, recent, cvDownloads, cvViews });
+        });
+
+        // ---- Contact messages (inbox) ----
+        admin.MapGet("/messages", async (PortfolioDbContext db) =>
+            Results.Ok(await db.ContactSubmissions.OrderByDescending(m => m.CreatedAt).ToListAsync()));
+
+        admin.MapPut("/messages/{id:int}/read", async (int id, PortfolioDbContext db) =>
+        {
+            var m = await db.ContactSubmissions.FindAsync(id);
+            if (m is null) return Results.NotFound();
+            m.IsRead = true;
+            await db.SaveChangesAsync();
+            return Results.Ok(m);
+        });
+
+        admin.MapDelete("/messages/{id:int}", async (int id, PortfolioDbContext db) =>
+        {
+            var m = await db.ContactSubmissions.FindAsync(id);
+            if (m is null) return Results.NotFound();
+            db.ContactSubmissions.Remove(m);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
 
         // ---- Image upload (stored in DB so it survives redeploys) ----
         admin.MapPost("/upload", async (IFormFile? file, PortfolioDbContext db) =>

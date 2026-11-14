@@ -114,6 +114,19 @@ public class ContactMessage
     public string Message { get; set; } = string.Empty;
 }
 
+// A contact-form submission, persisted so messages are never lost even when
+// email delivery is not configured. Viewable in the admin "Messages" tab.
+public class ContactSubmission
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public bool IsRead { get; set; }
+    public bool Emailed { get; set; }
+}
+
 // Privacy-friendly view counter (no PII) — one row per tracked key
 // ("home" or "project:{id}").
 public class ViewCounter
@@ -125,5 +138,21 @@ public class ViewCounter
 }
 
 public record TrackRequest(string Key);
+
+// A single view "session" for a page: when it started, how long it lasted, and
+// whether the visitor opened or downloaded the CV during it.
+public class ViewEvent
+{
+    public int Id { get; set; }
+    public string Key { get; set; } = string.Empty; // "home" or "project:{id}"
+    public DateTime StartedAt { get; set; } = DateTime.UtcNow;
+    public int DurationMs { get; set; }
+    public bool CvViewed { get; set; }
+    public bool CvDownloaded { get; set; }
+}
+
+public record TrackStartRequest(string Key);
+public record TrackEndRequest(int Id, int DurationMs);
+public record TrackCvRequest(int Id, string Action); // "view" | "download"
 
 public record LoginRequest(string Password);
