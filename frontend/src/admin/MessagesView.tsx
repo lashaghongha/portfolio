@@ -97,6 +97,11 @@ export default function MessagesView() {
           </div>
           <a href={`mailto:${m.email}`} className="text-sm text-accent-soft hover:text-white">{m.email}</a>
           <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-slate-300">{m.message}</p>
+          {m.emailError && (
+            <p className="mt-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 font-mono text-xs leading-relaxed text-amber-300">
+              Email error: {m.emailError}
+            </p>
+          )}
           <div className="mt-3 flex items-center gap-2">
             <a href={`mailto:${m.email}?subject=Re: your message`} className="btn-ghost !py-1.5 text-xs">
               <CornerUpLeft size={13} /> Reply
